@@ -766,8 +766,35 @@ latinobarometro <- latinobarometro %>%
                                      labels = c("Muy satisfecho",
                                                 "Más bien satisfecho",
                                                 "No muy satisfecho",
-                                                "Nada satisfecho")))
-
+                                                "Nada satisfecho")),
+         ideologia = ifelse(ideologia == 97, NA, ideologia),
+         pais_poderosos_f = factor(pais_poderosos,
+                                   labels = c("Grupos poderosos en su propio beneficio",
+                                              "Para el bien de todo el pueblo")),
+         just_dist_ingresos_f = factor(just_dist_ingresos,
+                                       labels = c("Muy justa",
+                                                  "Justa",
+                                                  "Injusta",
+                                                  "Muy injusta")),
+         situacion_eco_pais_f = factor(situacion_eco_pais,
+                                       labels = c("Muy buena",
+                                                  "Buena",
+                                                  "Regular",
+                                                  "Mala",
+                                                  "Muy mala")),
+         ingreso_subjetivo_f = factor(ing_subjetivo,
+                                     labels = c("Les alcanza bien, pueden ahorrar",
+                                                "Les alcanza justo, sin grandes dificultades",
+                                                "No les alcanza, tienen dificultades",
+                                                "No les alcanza, tienen grandes dificultades")),
+         pro_mercado_f = factor(pro_mercado,
+                                labels = c("Muy de acuerdo",
+                                           "De acuerdo",
+                                           "En desacuerdo",
+                                           "Muy en desacuerdo")))
+         
+                                      
+         
 variables_garantia <- c("garantia_politica",
                         "garantia_profesion",
                         "garantia_medioambiente",
@@ -791,3 +818,65 @@ for (i in variables_garantia) {
   nombre_factor <- paste0(i, "_f")
   latinobarometro[[nombre_factor]] <- factor(latinobarometro[[i]], labels = etiquetas_garantia)
 }
+
+
+#Selección de variables con las que nos quedamos---------------
+
+orden_variables <- c("entrevista",
+                     "pais",
+                     "anio",
+                     "wt",
+                     "sexo2",
+                     "edad",
+                     "años_ed",
+                     "estado_ocupacional",
+                     "trabajo_anterior",
+                     "trabajo_actual",
+                     "clase_subjetiva",
+                     "democracia",
+                     "satisf_democracia",
+                     "garantia_politica",
+                     "garantia_profesion",
+                     "garantia_medioambiente",
+                     "garantia_propprivada",
+                     "garantia_distriqueza",
+                     "garantia_genero",
+                     "garantia_oportunidades",
+                     "garantia_expresion",
+                     "garantia_religion",
+                     "garantia_crimen",
+                     "garantia_seguridadsocial",
+                     "garantia_solidaridad",
+                     "garantia_trabajo",
+                     "ideologia",
+                     "pais_poderosos",
+                     "escala_pobriq_padres",
+                     "escala_pobriq_personal",
+                     "escala_pobriq_hijos",
+                     "situacion_padres",
+                     "situacion_hijos",
+                     "just_dist_ingresos",
+                     "situacion_eco_pais",
+                     "ing_subjetivo",
+                     "pro_mercado",
+                     "bienes_comp",
+                     "bienes_lava",
+                     "bienes_telef",
+                     "bienes_celular",
+                     "bienes_auto",
+                     "bienes_cloaca",
+                     "bienes_aguapot",
+                     "bienes_aguacal",
+                     "bienes_casa",
+                     "evasion",
+                     "arreglo_impuestos")
+
+latinobarometro <- latinobarometro %>% 
+  select(orden_variables)
+
+#Guardamos el dataset limpio-------------------
+save(latinobarometro, file = "bases/latinobarometro_select.RData")
+
+  
+  
+  
