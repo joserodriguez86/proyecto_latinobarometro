@@ -665,6 +665,14 @@ latinobarometro <- latinobarometro %>%
                                        anio == 2009 ~ p60st_b,
                                        anio == 2010 ~ P56ST,
                                        anio == 2020 ~ p24st_b,
+                                       TRUE ~ NA_real_),
+         ayuda_pobres_dinero = case_when(anio == 2020 ~ s6npn_01,
+                                         TRUE ~ NA_real_),
+         ayuda_gobierno_tramo = case_when(anio == 2020 ~ s8npn_a,
+                                          TRUE ~ NA_real_),
+         pago_impuestos_tramo = case_when(anio == 2020 ~ s8npn_b,
+                                          TRUE ~ NA_real_),
+         aceptabilidad_desigualdad = case_when(anio == 2020 ~ p72npn,
                                        TRUE ~ NA_real_))
 
 
@@ -713,7 +721,10 @@ seleccion_variables <- c("democracia",
                          "estado_ocupacional",
                          "trabajo_anterior",
                          "trabajo_actual",
-                         "clase_subjetiva")
+                         "clase_subjetiva",
+                         "ayuda_gobierno_tramo",
+                         "pago_impuestos_tramo",
+                         "aceptabilidad_desigualdad")
 
 for (i in seleccion_variables) {
   latinobarometro[[i]] <- ifelse(latinobarometro[[i]] < 1, NA, latinobarometro[[i]])
@@ -791,7 +802,22 @@ latinobarometro <- latinobarometro %>%
                                 labels = c("Muy de acuerdo",
                                            "De acuerdo",
                                            "En desacuerdo",
-                                           "Muy en desacuerdo")))
+                                           "Muy en desacuerdo")),
+         ayuda_pobres_dinero_f = factor(case_when(ayuda_pobres_dinero == 1 ~ "Si",
+                                                ayuda_pobres_dinero == 0 ~ "No",
+                                                TRUE ~ NA_character_)),
+         ayuda_gobierno_tramo_f = factor(case_when(ayuda_gobierno_tramo %in% c(1:3) ~ "Bajo",
+                                                  ayuda_gobierno_tramo %in% c(4:7) ~ "Medio",
+                                                  ayuda_gobierno_tramo %in% c(8:10) ~ "Alto",
+                                                  ayuda_gobierno_tramo == 11 ~ "A todos por igual",
+                                                  ayuda_gobierno_tramo == 12 ~ "A ninguno",
+                                                  TRUE ~ NA_character_)),
+         pago_impuestos_tramo_f = factor(case_when(pago_impuestos_tramo %in% c(1:3) ~ "Bajo",
+                                                  pago_impuestos_tramo %in% c(4:7) ~ "Medio",
+                                                  pago_impuestos_tramo %in% c(8:10) ~ "Alto",
+                                                  pago_impuestos_tramo == 11 ~ "Todos por igual",
+                                                  pago_impuestos_tramo == 12 ~ "Ninguno",
+                                                  TRUE ~ NA_character_)))
          
                                       
          
@@ -871,7 +897,11 @@ orden_variables <- c("entrevista",
                      "bienes_aguacal",
                      "bienes_casa",
                      "evasion",
-                     "arreglo_impuestos")
+                     "arreglo_impuestos",
+                     "ayuda_pobres_dinero_f",
+                     "ayuda_gobierno_tramo_f",
+                     "pago_impuestos_tramo_f",
+                     "aceptabilidad_desigualdad")
 
 latinobarometro <- latinobarometro %>% 
   select(all_of(orden_variables))
