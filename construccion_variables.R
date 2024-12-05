@@ -787,6 +787,9 @@ latinobarometro <- latinobarometro %>%
                                                   "Justa",
                                                   "Injusta",
                                                   "Muy injusta")),
+         just_dist_ingresos_dic = factor(case_when(just_dist_ingresos %in% c(1, 2) ~ "Justa",
+                                           just_dist_ingresos %in% c(3, 4) ~ "Injusta",
+                                           TRUE ~ NA_character_)),
          situacion_eco_pais_f = factor(situacion_eco_pais,
                                        labels = c("Muy buena",
                                                   "Buena",
@@ -811,13 +814,15 @@ latinobarometro <- latinobarometro %>%
                                                   ayuda_gobierno_tramo %in% c(8:10) ~ "Alto",
                                                   ayuda_gobierno_tramo == 11 ~ "A todos por igual",
                                                   ayuda_gobierno_tramo == 12 ~ "A ninguno",
-                                                  TRUE ~ NA_character_)),
+                                                  TRUE ~ NA_character_),
+                                         levels = c("A ninguno", "A todos por igual", "Bajo", "Medio", "Alto")),
          pago_impuestos_tramo_f = factor(case_when(pago_impuestos_tramo %in% c(1:3) ~ "Bajo",
                                                   pago_impuestos_tramo %in% c(4:7) ~ "Medio",
                                                   pago_impuestos_tramo %in% c(8:10) ~ "Alto",
                                                   pago_impuestos_tramo == 11 ~ "Todos por igual",
                                                   pago_impuestos_tramo == 12 ~ "Ninguno",
-                                                  TRUE ~ NA_character_)))
+                                                  TRUE ~ NA_character_),
+                                         levels = c("Ninguno", "Todos por igual", "Bajo", "Medio", "Alto")))
          
                                       
          
@@ -884,6 +889,7 @@ orden_variables <- c("entrevista",
                      "situacion_padres",
                      "situacion_hijos",
                      "just_dist_ingresos_f",
+                     "just_dist_ingresos_dic",
                      "situacion_eco_pais_f",
                      "ingreso_subjetivo_f",
                      "pro_mercado_f",
