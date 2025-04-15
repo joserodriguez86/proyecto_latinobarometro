@@ -68,7 +68,7 @@ deciles_hog <- deciles_hog %>%
 
 #PIB per cápita (WDI)
 
-View(WDIsearch('gdp'))
+# View(WDIsearch('gdp'))
 
 datos_wdi <- WDI(country = c("ARG", "BOL", "BRA", "CHL", "COL", "CRI", "DOM", "ECU",
                 "SLV", "GTM", "HND", "MEX", "NIC", "PAN", "PRY", "PER",
@@ -127,12 +127,12 @@ trabajo_informal <- trabajo_informal %>%
   mutate(anio = as.numeric(anio))
 
 
-#Ocupaciones medias (OIT)
+#Ocupaciones medias (OIT-CEPAL)
 
 dat <- get_ilostat(id = 'EMP_TEMP_SEX_OC2_NB_A', 
                    filters = list(
-                     ref_area = c("ARG", "BOL", "BRA", "CHL", "COL", "CRI", "DOM", "ECU",
-                                  "SLV", "GTM", "HND", "MEX", "NIC", "PAN", "PRY", "PER",
+                     ref_area = c("ARG", "BOL", "BRA", "CHL", "COL", "DOM", "ECU",
+                                  "SLV", "GTM", "HND", "MEX", "NIC",
                                   "URY", "VEN"),
                      sex = 'T'))
 
@@ -143,29 +143,68 @@ sectores_medios <- dat %>%
   mutate(
     total_ocup = sum(obs_value, na.rm = T),
     ocup_pct = (obs_value / total_ocup)*100,
-    ocupaciones_medias = sum(ocup_pct[classif1 %in% c("OC2_ISCO08_21", 
-                                                      "OC2_ISCO08_22", 
-                                                      "OC2_ISCO08_23", 
-                                                      "OC2_ISCO08_24", 
-                                                      "OC2_ISCO08_25", 
-                                                      "OC2_ISCO08_26", 
-                                                      "OC2_ISCO08_31", 
-                                                      "OC2_ISCO08_32",
-                                                      "OC2_ISCO08_33",
-                                                      "OC2_ISCO08_34",
-                                                      "OC2_ISCO08_35",
-                                                      "OC2_ISCO08_41",
-                                                      "OC2_ISCO08_42",
-                                                      "OC2_ISCO08_43",
-                                                      "OC2_ISCO08_44")], na.rm = T))
+    ocupaciones_medias = case_when((ref_area == "BRA" & time == 2011) |
+                                     (ref_area == "DOM" & time %in% c(2010:2014)) |
+                                     (ref_area == "ECU" & time %in% c(2010:2012)) |
+                                     (ref_area == "HND" & time %in% c(2010:2014)) |
+                                     (ref_area == "NIC" & time %in% c(2010,2012, 
+                                                                  2014)) |
+                                     (ref_area == "SLV" & time %in% c(2010:2012)) |
+                                     (ref_area == "URY" & time == 2010) ~ 
+                                     sum(ocup_pct[classif1 %in% c("OC2_ISCO88_21", 
+                                                                  "OC2_ISCO88_22", 
+                                                                  "OC2_ISCO88_23", 
+                                                                  "OC2_ISCO88_24", 
+                                                                  "OC2_ISCO88_31", 
+                                                                  "OC2_ISCO88_32",
+                                                                  "OC2_ISCO88_33",
+                                                                  "OC2_ISCO88_34",
+                                                                  "OC2_ISCO88_41",
+                                                                  "OC2_ISCO88_42")], na.rm = T),
+                                   TRUE ~ sum(ocup_pct[classif1 %in% c("OC2_ISCO08_21", 
+                                                                       "OC2_ISCO08_22", 
+                                                                       "OC2_ISCO08_23", 
+                                                                       "OC2_ISCO08_24", 
+                                                                       "OC2_ISCO08_25", 
+                                                                       "OC2_ISCO08_26", 
+                                                                       "OC2_ISCO08_31", 
+                                                                       "OC2_ISCO08_32",
+                                                                       "OC2_ISCO08_33",
+                                                                       "OC2_ISCO08_34",
+                                                                       "OC2_ISCO08_35",
+                                                                       "OC2_ISCO08_41",
+                                                                       "OC2_ISCO08_42",
+                                                                       "OC2_ISCO08_43",
+                                                                       "OC2_ISCO08_44")], na.rm = T)))
 
 
 sectores_medios <- sectores_medios %>%
   rename(pais = ref_area, 
          anio = time) %>% 
   mutate(anio = as.numeric(anio)) %>%
-  summarise(ocupaciones_medias = mean(ocupaciones_medias, na.rm = T))
+  summarise(ocupaciones_medias = mean(ocupaciones_medias, na.rm = T)) %>% 
+  ungroup()
 
+#datos de cepal para paraguay, costa rica, panama y peru
+ocupacion_cepal <- call.data(id.indicator = 755, language.en = F)
+ocupacion_hog <- ocupacion_cepal %>% 
+  filter(iso3 %in% c("PRY", "CRI", "PAN", "PER"),
+         Sexo == "Ambos sexos",
+         `Grupos ocupacionales CIUO 88` %in% c("2.Profesionales, científicos e intelectuales", "3.Técnicos y profesionales de nivel medio", "4.Empleados de oficina"),
+         Años >= 2010)
+
+ocupacion_hog <- ocupacion_hog %>%
+  select(iso3, Años, value) %>% 
+  rename(pais = iso3, 
+         anio = Años) 
+
+ocupacion_hog <- ocupacion_hog %>%
+  group_by(pais, anio) %>%
+  summarise(ocupaciones_medias = sum(value, na.rm = T)) %>% 
+  ungroup()
+
+sectores_medios <- sectores_medios %>% 
+  add_row(ocupacion_hog)
 
 #Unión bases agregadas--------------
 
@@ -180,3 +219,28 @@ base_agregadas <- pib %>%
 
 prueba <- base_agregadas %>% 
   filter(anio == 2010 | anio == 2020)
+
+
+#Arreglo datos faltantes-------------
+datos_paises <- base_agregadas %>%
+  group_by(pais) %>%       
+  arrange(pais, anio) %>%        
+  mutate(
+    impuestos = ifelse(
+      anio == 2023 & is.na(impuestos),  
+      lag(impuestos),                   
+      impuestos                          
+    )) %>% 
+  fill(gini, .direction = "downup") %>%
+  fill(palma, .direction = "downup") %>%
+  fill(emp_publico, .direction = "downup") %>%
+  fill(informalidad, .direction = "downup") %>%
+  fill(ocupaciones_medias, .direction = "downup") %>%
+  ungroup() %>% 
+  rename(iso3 = pais)
+
+
+
+
+# Guardar la base de datos--------------
+save(datos_paises, file = "bases/base_datos_agregados.RData")
