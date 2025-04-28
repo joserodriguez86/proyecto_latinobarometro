@@ -3,6 +3,7 @@ library(tidyverse)
 library(CepalStatR)
 library(WDI)
 library(Rilostat)
+library(archive)
 
 indicadores <- call.indicators(language.en = F)
 
@@ -19,14 +20,46 @@ ingresos_tributarios <- ing_tributarios %>%
                      "SLV", "GTM", "HND", "MEX", "NIC", "PAN", "PRY", "PER",
                      "URY", "VEN"),
          `Cobertura institucional__IngTri` == "Gobierno general",
-         Clasificacion_impuestos == "Total ingresos tributarios (incluyendo contribuciones sociales)",
+         Clasificacion_impuestos %in% c("Total ingresos tributarios", "Ingresos tributarios directos",
+                                        "Impuestos sobre los ingresos utilidades y ganancias de capital",
+                                        "Ingresos tributarios indirectos",
+                                        "Impuestos generales sobre bienes y servicios",
+                                        "Total ingresos tributarios (incluyendo contribuciones sociales)"),
+         
          Años >= 2010)
 
-ingresos_tributarios <- ingresos_tributarios %>% 
-  select(iso3, Años, value) %>% 
+ingresos_tributarios <- ingresos_tributarios %>%
+  pivot_wider(id_cols = c(iso3, Años),  
+              names_from = Clasificacion_impuestos, 
+              values_from = value) %>%
   rename(pais = iso3, 
          anio = Años, 
-         impuestos = value)
+         impuestos_tot = 'Total ingresos tributarios',
+         impuestos_dir = 'Ingresos tributarios directos',
+         impuestos_renta = 'Impuestos sobre los ingresos utilidades y ganancias de capital',
+         impuestos_ind = 'Ingresos tributarios indirectos',
+         impuestos_iva = 'Impuestos generales sobre bienes y servicios',
+         impuestos_tot_cs = 'Total ingresos tributarios (incluyendo contribuciones sociales)')
+
+
+# #Ingresos tributarios banco mundial
+# options(scipen = 999)
+# 
+# ingresos_tributarios_wb <- read.csv("bases/rev_tax_data.csv") 
+# 
+# ingresos_tributarios_wb <- ingresos_tributarios_wb %>% 
+#   filter(iso3_code %in% c("ARG", "BOL", "BRA", "CHL", "COL", "CRI", "DOM", "ECU",
+#                      "SLV", "GTM", "HND", "MEX", "NIC", "PAN", "PRY", "PER",
+#                      "URY", "VEN"),
+#          Year2 >= 2010)
+# 
+# ingresos_tributarios_wb_tot <- ingresos_tributarios_wb %>% 
+#   filter(indicator.name == "Tax Revenue") %>% 
+#   select(iso3_code, Year2, value) %>% 
+#   rename(pais = iso3_code, 
+#          anio = Year2, 
+#          impuestos = value)
+
 
 #Gini (CEPAL)
 
@@ -225,12 +258,9 @@ prueba <- base_agregadas %>%
 datos_paises <- base_agregadas %>%
   group_by(pais) %>%       
   arrange(pais, anio) %>%        
-  mutate(
-    impuestos = ifelse(
-      anio == 2023 & is.na(impuestos),  
-      lag(impuestos),                   
-      impuestos                          
-    )) %>% 
+  mutate(across(
+    starts_with("impuestos"),
+    ~ ifelse(anio == 2023 & is.na(.x), lag(.x), .x))) %>%  
   fill(gini, .direction = "downup") %>%
   fill(palma, .direction = "downup") %>%
   fill(emp_publico, .direction = "downup") %>%
