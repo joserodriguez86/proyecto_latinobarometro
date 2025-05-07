@@ -147,19 +147,19 @@ tabcontrib(mca2023, dim = 1, best = T)
 ggcloud_variables(mca2023, vlab = T, shapes = T, shapesize = 1.5, force = 2,
                   textsize = 2.3)
 
-#2013
-var_obj_2013 <- latinobarometro %>%
-  filter(anio == 2013) %>%
+#2016
+var_obj_2016 <- latinobarometro %>%
+  filter(anio == 2016) %>%
   select(trabajo_actual_f, nivel_ed, bienes_lava, bienes_celular, bienes_auto, bienes_cloaca, bienes_aguapot,
          bienes_aguacal, bienes_casa, wt)
 
-mca2013 <- speMCA(var_obj_2013[,1:9], ncp = 2, row.w = var_obj_2013$wt)
+mca2016 <- speMCA(var_obj_2016[,1:9], ncp = 2, row.w = var_obj_2013$wt)
 
-modif.rate(mca2013)$modif
+modif.rate(mca2016)$modif
 
-tabcontrib(mca2013, dim = 1, best = T)
+tabcontrib(mca2016, dim = 1, best = T)
 
-ggcloud_variables(mca2013, vlab = T, shapes = T, shapesize = 1.5, force = 2,
+ggcloud_variables(mca2016, vlab = T, shapes = T, shapesize = 1.5, force = 2,
                   textsize = 2.3) + 
   labs(title = "MCA 2013")
 
@@ -182,9 +182,9 @@ ggcloud_variables(mca2011, vlab = T, shapes = T, shapesize = 1.5, force = 2,
 
 #Construcción de índice
 latinobarometro2023 <- latinobarometro %>%
-  filter(anio %in% c(2011, 2013, 2023)) %>%
+  filter(anio %in% c(2011, 2016, 2023)) %>%
   mutate(dim1 = ifelse(anio == 2011, mca2011$ind$coord[,1],
-                       ifelse(anio == 2013, mca2013$ind$coord[,1], mca2023$ind$coord[,1])),
+                       ifelse(anio == 2016, mca2016$ind$coord[,1], mca2023$ind$coord[,1])),
          dim1_std = estandarizar_ponderado(dim1, wt))
 
 latinobarometro2023 %>% 
@@ -328,7 +328,8 @@ correspondencia <- evasion %>%
   left_join(justificacion, by = "iso3") %>% 
   filter(iso3 != "NIC")
 
-correspondencia %>% 
+correspondencia %>%
+  filter(iso3 != "CHL") %>% 
   ggplot(aes(x = justificacion, y = evasion)) +
   geom_point() +
   geom_smooth(method = "lm", se = T, color = "red") +
@@ -345,8 +346,7 @@ correspondencia %>%
        caption = "Fuente: elaboración propia en base a Latinobarómetro",
        y = "% de evasión impositiva",
        x = "% de justificación de la evasión") +
-  scale_y_continuous(labels = scales::percent_format(accuracy = 1), breaks = seq(0, .4, 0.05), limits = c(0, .4)) +
-  scale_x_continuous(labels = scales::percent_format(accuracy = 1), breaks = seq(0, .3, 0.05), limits = c(0, .3))
+  scale_y_continuous(labels = scales::percent_format(accuracy = 1), breaks = seq(0, .4, 0.05), limits = c(0, .4)) 
 
 
 ggsave("graficos/correspondencia_evasion_justificacion.png", width = 8, height = 5)
@@ -547,10 +547,10 @@ ggsave("graficos/evasion_clases_medias.png", width = 8, height = 5)
 
 ```{r evasion subjetiva, message=FALSE, warning=FALSE}
 latinobarometro %>% 
-  filter(anio == 2023 | anio == 2016 | anio == 2011, !iso3 %in% c("VEN", "NIC")) %>%
+  filter(anio == 2023 | anio == 2013, !iso3 %in% c("VEN", "NIC")) %>%
   group_by(anio_pais) %>%
   summarise(
-    impuestos = weighted.mean(evasion_dic2, wt = wt, na.rm = T),
+    impuestos = weighted.mean(evasion_dic3, wt = wt, na.rm = T),
     pib_ppa = mean(pib_ppa, na.rm = T)) %>% 
   ggplot(aes(x = pib_ppa, y = impuestos)) +
   geom_point() +
@@ -574,10 +574,10 @@ latinobarometro %>%
 ggsave("graficos/evasion_sub_pib.png", width = 8, height = 5)
 
 latinobarometro %>% 
-  filter(anio == 2023 | anio == 2016 | anio == 2011, !iso3 %in% c("VEN", "NIC")) %>%
+  filter(anio == 2023, !iso3 %in% c("VEN", "NIC")) %>%
   group_by(anio_pais) %>%
   summarise(
-    impuestos = weighted.mean(evasion_dic2, wt = wt, na.rm = T),
+    impuestos = weighted.mean(evasion_dic3, wt = wt, na.rm = T),
     gini = mean(gini, na.rm = T)) %>% 
   ggplot(aes(x = gini, y = impuestos)) +
   geom_point() +
@@ -599,10 +599,10 @@ latinobarometro %>%
 ggsave("graficos/evasion_sub_gini.png", width = 8, height = 5)
 
 latinobarometro %>% 
-  filter(anio == 2023 | anio == 2016 | anio == 2011, !iso3 %in% c("VEN", "NIC")) %>%
+  filter(anio == 2023, !iso3 %in% c("VEN", "NIC")) %>%
   group_by(anio_pais) %>%
   summarise(
-    impuestos = weighted.mean(evasion_dic2, wt = wt, na.rm = T),
+    impuestos = weighted.mean(evasion_dic3, wt = wt, na.rm = T),
     palma = mean(palma, na.rm = T)) %>% 
   ggplot(aes(x = palma, y = impuestos)) +
   geom_point() +
@@ -624,10 +624,10 @@ latinobarometro %>%
 ggsave("graficos/evasion_sub_palma.png", width = 8, height = 5)
 
 latinobarometro %>% 
-  filter(anio == 2023 | anio == 2016 | anio == 2011, !iso3 %in% c("VEN", "NIC")) %>%
+  filter(anio == 2023, !iso3 %in% c("VEN", "NIC")) %>%
   group_by(anio_pais) %>%
   summarise(
-    impuestos = weighted.mean(evasion_dic2, wt = wt, na.rm = T),
+    impuestos = weighted.mean(evasion_dic3, wt = wt, na.rm = T),
     impuestos_pbi = mean(impuestos_tot_cs, na.rm = T)) %>% 
   ggplot(aes(x = impuestos_pbi, y = impuestos)) +
   geom_point() +
@@ -649,10 +649,10 @@ latinobarometro %>%
 ggsave("graficos/evasion_sub_impuestos_pbi.png", width = 8, height = 5)
 
 latinobarometro %>% 
-  filter(anio == 2023 | anio == 2016 | anio == 2011, !iso3 %in% c("VEN", "NIC")) %>%
+  filter(anio == 2023, !iso3 %in% c("VEN", "NIC")) %>%
   group_by(anio_pais) %>%
   summarise(
-    impuestos = weighted.mean(evasion_dic2, wt = wt, na.rm = T),
+    impuestos = weighted.mean(evasion_dic3, wt = wt, na.rm = T),
     empleo_publico = mean(emp_publico, na.rm = T)) %>% 
   ggplot(aes(x = empleo_publico, y = impuestos)) +
   geom_point() +
@@ -674,10 +674,10 @@ latinobarometro %>%
 ggsave("graficos/evasion_sub_empleo_publico.png", width = 8, height = 5)
 
 latinobarometro %>% 
-  filter(anio == 2023 | anio == 2016 | anio == 2011, !iso3 %in% c("VEN", "NIC")) %>%
+  filter(anio == 2023, !iso3 %in% c("VEN", "NIC")) %>%
   group_by(anio_pais) %>%
   summarise(
-    impuestos = weighted.mean(evasion_dic2, wt = wt, na.rm = T),
+    impuestos = weighted.mean(evasion_dic3, wt = wt, na.rm = T),
     informalidad = mean(informalidad, na.rm = T)) %>% 
   ggplot(aes(x = informalidad, y = impuestos)) +
   geom_point() +
@@ -699,10 +699,10 @@ latinobarometro %>%
 ggsave("graficos/evasion_sub_informalidad.png", width = 8, height = 5)
 
 latinobarometro %>% 
-  filter(anio == 2023 | anio == 2016 | anio == 2011, !iso3 %in% c("VEN", "NIC")) %>%
+  filter(anio == 2023, !iso3 %in% c("VEN", "NIC")) %>%
   group_by(anio_pais) %>%
   summarise(
-    impuestos = weighted.mean(evasion_dic2, wt = wt, na.rm = T),
+    impuestos = weighted.mean(evasion_dic3, wt = wt, na.rm = T),
     ocupaciones_medias = mean(ocupaciones_medias, na.rm = T)) %>% 
   ggplot(aes(x = ocupaciones_medias, y = impuestos)) +
   geom_point() +
@@ -788,12 +788,12 @@ latinobarometro2023$pro_mercado_f <- relevel(latinobarometro2023$pro_mercado_f, 
 latinobarometro2023$pais_f <- relevel(latinobarometro2023$pais_f, ref = "Mex")
 latinobarometro2023$sexo2 <- relevel(latinobarometro2023$sexo2, ref = "Mujer")
 
-mod1_a <- glm(evasion_dic2 ~ edad + sexo2 + dim1_std,
+mod1_a <- glm(evasion_dic3 ~ edad + sexo2 + dim1_std,
                  data = latinobarometro2023, weights = wt, family = binomial(link = "logit"))
 
-mod1_b <- glm(evasion_dic2 ~ edad + sexo2 + dim1_std + clase_subjetiva_f + just_dist_ingresos_f + pro_mercado_f, data = latinobarometro2023, weights = wt, family = binomial(link = "logit"))
+mod1_b <- glm(evasion_dic3 ~ edad + sexo2 + dim1_std + clase_subjetiva_f + just_dist_ingresos_f + pro_mercado_f, data = latinobarometro2023, weights = wt, family = binomial(link = "logit"))
 
-mod1_c <- glm(evasion_dic2 ~ edad + sexo2 + dim1_std + clase_subjetiva_f + just_dist_ingresos_f + pro_mercado_f + pais_f, data = latinobarometro2023, weights = wt, family = binomial(link = "logit"))
+mod1_c <- glm(evasion_dic3 ~ edad + sexo2 + dim1_std + clase_subjetiva_f + just_dist_ingresos_f + pro_mercado_f + pais_f, data = latinobarometro2023, weights = wt, family = binomial(link = "logit"))
 
 mod1 <- export_summs(mod1_a, mod1_b, mod1_c, model.names = c("Objetivas", "Objetivas + mediadoras", "Efecto fijo países"), 
                      exp = T, stars = c(`***` = 0.01, `**` = 0.05, `*` = 0.1),
@@ -967,32 +967,32 @@ latinobarometro2023$sexo2 <- relevel(latinobarometro2023$sexo2, ref = "Mujer")
 
 #Modelo nulo
 
-latinobarometro2023 <- latinobarometro2023 %>% 
-  filter(!pais_f %in% c("Ven", "Nic"))
+multi_just <- latinobarometro2023 %>% 
+  filter(!pais_f %in% c("Ven", "Nic"), anio == 2023)
 
-mod1_sub <- glmer(evasion_dic2 ~ 1 + (1 | anio_pais), data = latinobarometro2023, family = binomial(link = "logit"), weights = wt)
+mod1_sub <- glmer(evasion_dic3 ~ 1 + (1 | anio_pais), data = multi_just, family = binomial(link = "logit"), weights = wt)
 
 icc_mod1 <- icc(mod1_sub)
 print(icc_mod1)
 
-mod2_sub <- glmer(evasion_dic2 ~ edad + sexo2 + dim1_std + 
+mod2_sub <- glmer(evasion_dic3 ~ edad + sexo2 + dim1_std + 
                            clase_subjetiva_f + just_dist_ingresos_f + pro_mercado_f + 
                            (1 | anio_pais),
-                           data = latinobarometro2023,
+                           data = multi_just,
                            weights = wt,
                            family = binomial(link = "logit"))
 
-mod3_sub <- glmer(evasion_dic2 ~ edad + sexo2 + dim1_std + 
+mod3_sub <- glmer(evasion_dic3 ~ edad + sexo2 + dim1_std + 
                            clase_subjetiva_f + just_dist_ingresos_f + pro_mercado_f +
-                    pib_ppa + informalidad + impuestos_tot_cs +
+                    pib_ppa + informalidad + impuestos_tot_cs + gini + ocupaciones_medias + 
                            (1 | anio_pais),
-                           data = latinobarometro2023,
+                           data = multi_just,
                            weights = wt,
                            family = binomial(link = "logit"))
 
-# check_collinearity(mod3_sub)
+check_collinearity(mod3_sub)
 
-# compare_performance(mod1_sub, mod2_sub, mod3_sub)
+compare_performance(mod1_sub, mod2_sub, mod3_sub)
 
 tab_model(mod1_sub, mod2_sub, mod3_sub, transform = "exp", p.style = "stars",
              show.ci = F,
