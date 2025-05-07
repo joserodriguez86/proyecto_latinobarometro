@@ -309,6 +309,50 @@ latinobarometro %>%
 ggsave("graficos/tendencias_arreglo_impuestos_pais.png", width = 8, height = 5)
 ```
 
+### Correspondencia entre evasión y justificación de la evasión
+
+```{r correspondencia, message=FALSE, warning=FALSE}
+justificacion <- latinobarometro %>% 
+  filter(anio == 2023) %>% 
+  group_by(iso3) %>%
+  summarise(
+    justificacion = weighted.mean(evasion_dic3, wt = wt, na.rm = T))
+
+evasion <- latinobarometro %>%
+  filter(anio == 2020) %>% 
+  group_by(iso3) %>%
+  summarise(
+    evasion = weighted.mean(arreglo_impuestos, wt = wt, na.rm = T))
+
+correspondencia <- evasion %>% 
+  left_join(justificacion, by = "iso3") %>% 
+  filter(iso3 != "NIC")
+
+correspondencia %>% 
+  ggplot(aes(x = justificacion, y = evasion)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = T, color = "red") +
+  ggpmisc::stat_poly_eq(
+    formula = y ~ x,  # Fórmula del modelo lineal
+    aes(label = paste(after_stat(rr.label), sep = "*\", \"*")),  # Mostrar R²
+    parse = TRUE,
+    label.x = "right",  # Posición de la leyenda
+    size = 4
+  ) +
+  ggrepel::geom_text_repel(aes(label = iso3), size = 2.5) +
+  labs(title = "Evasión impositiva y justificación de la evasión",
+       subtitle = "Países de América Latina. 2020 y 2023",
+       caption = "Fuente: elaboración propia en base a Latinobarómetro",
+       y = "% de evasión impositiva",
+       x = "% de justificación de la evasión") +
+  scale_y_continuous(labels = scales::percent_format(accuracy = 1), breaks = seq(0, .4, 0.05), limits = c(0, .4)) +
+  scale_x_continuous(labels = scales::percent_format(accuracy = 1), breaks = seq(0, .3, 0.05), limits = c(0, .3))
+
+
+ggsave("graficos/correspondencia_evasion_justificacion.png", width = 8, height = 5)
+```
+
+
 
 ### Evasión impositiva declarada según características de países
 
