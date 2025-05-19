@@ -673,7 +673,20 @@ latinobarometro <- latinobarometro %>%
          pago_impuestos_tramo = case_when(anio == 2020 ~ s8npn_b,
                                           TRUE ~ NA_real_),
          aceptabilidad_desigualdad = case_when(anio == 2020 ~ p72npn,
-                                       TRUE ~ NA_real_))
+                                       TRUE ~ NA_real_),
+         corrupcion = case_when(anio == 2004 ~ p54st,
+                                anio == 2005 ~ p83st,
+                                anio == 2006 ~ p33st,
+                                anio == 2007 ~ p72st,
+                                anio == 2008 ~ p73st,
+                                anio == 2009 ~ p74st,
+                                anio == 2010 ~ P68ST,
+                                anio == 2011 ~ P81ST,
+                                anio == 2013 ~ P69ST,
+                                anio == 2015 ~ P67ST,
+                                anio == 2017 ~ P38ST,
+                                anio == 2020 ~ p70st,	
+                                anio == 2023 ~ P60ST))
 
 
 # Recodificación y categorías---------
@@ -724,7 +737,8 @@ seleccion_variables <- c("democracia",
                          "clase_subjetiva",
                          "ayuda_gobierno_tramo",
                          "pago_impuestos_tramo",
-                         "aceptabilidad_desigualdad")
+                         "aceptabilidad_desigualdad",
+                         "corrupcion")
 
 for (i in seleccion_variables) {
   latinobarometro[[i]] <- ifelse(latinobarometro[[i]] < 1, NA, latinobarometro[[i]])
@@ -822,7 +836,12 @@ latinobarometro <- latinobarometro %>%
                                                   pago_impuestos_tramo == 11 ~ "Todos por igual",
                                                   pago_impuestos_tramo == 12 ~ "Ninguno",
                                                   TRUE ~ NA_character_),
-                                         levels = c("Ninguno", "Todos por igual", "Bajo", "Medio", "Alto")))
+                                         levels = c("Ninguno", "Todos por igual", "Bajo", "Medio", "Alto")),
+         corrupcion_f = factor(corrupcion,
+                                   labels = c("Mucho",
+                                              "Algo",
+                                              "Poco",
+                                              "Nada")))
          
                                       
          
@@ -865,6 +884,7 @@ orden_variables <- c("entrevista",
                      "estado_ocupacional_f",
                      "trabajo_anterior_f",
                      "trabajo_actual_f",
+                     "clase_subjetiva",
                      "clase_subjetiva_f",
                      "democracia_f",
                      "satisf_democracia_f",
@@ -890,6 +910,7 @@ orden_variables <- c("entrevista",
                      "situacion_hijos",
                      "just_dist_ingresos_f",
                      "just_dist_ingresos_dic",
+                     "situacion_eco_pais",
                      "situacion_eco_pais_f",
                      "ingreso_subjetivo_f",
                      "pro_mercado_f",
@@ -907,7 +928,8 @@ orden_variables <- c("entrevista",
                      "ayuda_pobres_dinero_f",
                      "ayuda_gobierno_tramo_f",
                      "pago_impuestos_tramo_f",
-                     "aceptabilidad_desigualdad")
+                     "aceptabilidad_desigualdad",
+                     "corrupcion_f")
 
 latinobarometro <- latinobarometro %>% 
   select(all_of(orden_variables))

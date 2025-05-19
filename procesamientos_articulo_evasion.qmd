@@ -12,7 +12,7 @@ format:
 ```{r message=FALSE, warning=FALSE}
 rm(list = ls())
 
-pacman::p_load(tidyverse, Hmisc, gtsummary, GDAtools, jtools, huxtable, survey, ggoxford, ggtext, lme4, performance, sjPlot)
+pacman::p_load(tidyverse, Hmisc, gtsummary, GDAtools, jtools, huxtable, survey, ggoxford, ggtext, lme4, performance, sjPlot, factoextra)
 
 load("bases/latinobarometro_select.RData")
 load("bases/base_datos_agregados.RData")
@@ -32,8 +32,20 @@ latinobarometro <- latinobarometro %>%
          evasion_dic2 = ifelse(evasion == 1, 0, 1),
          evasion_dic3 = ifelse(evasion >= 7, 1, 0),
          argentina_lat = case_when(pais == 32 ~ "Argentina",
-                                   TRUE ~ "Resto América Latina")) %>% 
+                                   TRUE ~ "Resto América Latina"),
+         pro_mercado_dic = factor(case_when(pro_mercado_f == "Muy de acuerdo" ~ "De acuerdo",
+                                            pro_mercado_f == "De acuerdo" ~ "De acuerdo",
+                                            pro_mercado_f == "En desacuerdo" ~ "En desacuerdo",
+                                            pro_mercado_f == "Muy en desacuerdo" ~ "En desacuerdo",
+                                            TRUE ~ NA_character_)),
+         clase_subjetiva4 = factor(case_when(clase_subjetiva == 1 | clase_subjetiva == 2 ~ "Media alta",
+                                              clase_subjetiva == 3 ~ "Media",
+                                              clase_subjetiva == 4 ~ "Media baja",
+                                              clase_subjetiva == 5 ~ "Baja",
+                                              TRUE ~ NA_character_),
+                                   levels = c("Media alta", "Media", "Media baja", "Baja"))) %>% 
   filter(pais_f != "Esp")
+
 
 #Banderas
 latinobarometro <- latinobarometro %>% 
@@ -50,7 +62,79 @@ latinobarometro <- latinobarometro %>%
 
 latinobarometro$pib_ppa_log <- log(latinobarometro$pib_ppa)
 
+
 ```
+
+### Clusters países
+
+```{r clusters, message=FALSE, warning=FALSE}
+
+#Toda la base
+paises_sel <- datos_paises %>% 
+  filter(iso3 != "VEN") %>% 
+  group_by(iso3) %>% 
+  summarise(
+    pib_ppa = mean(pib_ppa, na.rm = TRUE),
+    impuestos_tot = mean(impuestos_tot, na.rm = TRUE),
+    gini = mean(gini, na.rm = TRUE),
+    palma = mean(palma, na.rm = TRUE),
+    emp_publico = mean(emp_publico, na.rm = TRUE),
+    informalidad = mean(informalidad, na.rm = TRUE),
+    ocupaciones_medias = mean(ocupaciones_medias, na.rm = TRUE)
+  ) %>% 
+  mutate(across(2:8, ~ as.numeric(scale(.)))) %>% 
+  column_to_rownames(var = "iso3")
+
+distancias <- dist(paises_sel, method = "euclidean")
+clust_jer <- hclust(distancias, method = "ward.D2")
+
+fviz_dend(clust_jer, 
+          k = 3,                      # número de grupos
+          rect = TRUE,               # dibuja rectángulos alrededor de los grupos
+          rect_border = "jco",       # colores bonitos (puede ser "jco", "lancet", etc.)
+          rect_fill = TRUE,          # rellena los rectángulos
+          cex = 0.8,                 # tamaño del texto
+          lwd = 1,                   # grosor de las líneas
+          main = "Dendrograma de países con variables agregadas") 
+
+ggsave("graficos/dendrograma_totalaños.png", width = 8, height = 6)
+
+grupos <- cutree(clust_jer, k = 3)
+df_grupos <- data.frame(iso3 = names(grupos), cluster = grupos)
+
+#Guardo los clusters en la base
+latinobarometro <- latinobarometro %>% 
+  left_join(df_grupos, by = "iso3") %>% 
+  mutate(
+    cluster = factor(cluster,
+                     levels = c(1, 2, 3),
+                     labels = c("Grupo 1", "Grupo 3", "Grupo 2")),
+    cluster = fct_relevel(cluster, "Grupo 1", "Grupo 2", "Grupo 3")
+  )
+
+datos_paises <- datos_paises %>% 
+  left_join(df_grupos, by = "iso3") %>% 
+  mutate(
+    cluster = factor(cluster,
+                     levels = c(1, 2, 3),
+                     labels = c("Grupo 1", "Grupo 3", "Grupo 2")),
+    cluster = fct_relevel(cluster, "Grupo 1", "Grupo 2", "Grupo 3")
+  )
+
+datos_paises %>%
+  filter(!is.na(cluster)) %>% 
+  group_by(cluster) %>% 
+  summarise(
+    pib_ppa = mean(pib_ppa, na.rm = TRUE),
+    impuestos_tot = mean(impuestos_tot, na.rm = TRUE),
+    gini = mean(gini, na.rm = TRUE),
+    palma = mean(palma, na.rm = TRUE),
+    emp_publico = mean(emp_publico, na.rm = TRUE),
+    informalidad = mean(informalidad, na.rm = TRUE),
+    ocupaciones_medias = mean(ocupaciones_medias, na.rm = TRUE)
+  ) 
+```
+
 
 ### Construcción de índice de estratificación con ACM
 ```{r message=FALSE, warning=FALSE}
@@ -99,10 +183,16 @@ estandarizar_ponderado <- function(x, w) {
   return((x - media_ponderada) / desv_ponderada)
 }
 
+coords_2010 <- data.frame(anio = 2010, dim1 = mca2010$ind$coord[,1])
+coords_2020 <- data.frame(anio = 2020, dim1 = mca2020$ind$coord[,1])
+
+coords_total <- bind_rows(coords_2010, coords_2020)
+
+# Filtrar y unir con coordenadas
 latinobarometro2020_2010 <- latinobarometro %>%
   filter(anio %in% c(2010, 2020)) %>%
-  mutate(dim1 = ifelse(anio == 2010, mca2010$ind$coord[,1], mca2020$ind$coord[,1]),
-         dim1_std = estandarizar_ponderado(dim1, wt))
+  bind_cols(dim1 = coords_total$dim1) %>%
+  mutate(dim1_std = estandarizar_ponderado(dim1, wt))
 
 
 latinobarometro2020_2010 %>% 
@@ -153,13 +243,29 @@ var_obj_2016 <- latinobarometro %>%
   select(trabajo_actual_f, nivel_ed, bienes_lava, bienes_celular, bienes_auto, bienes_cloaca, bienes_aguapot,
          bienes_aguacal, bienes_casa, wt)
 
-mca2016 <- speMCA(var_obj_2016[,1:9], ncp = 2, row.w = var_obj_2013$wt)
+mca2016 <- speMCA(var_obj_2016[,1:9], ncp = 2, row.w = var_obj_2016$wt)
 
 modif.rate(mca2016)$modif
 
 tabcontrib(mca2016, dim = 1, best = T)
 
 ggcloud_variables(mca2016, vlab = T, shapes = T, shapesize = 1.5, force = 2,
+                  textsize = 2.3) + 
+  labs(title = "MCA 2016")
+
+#2013
+var_obj_2013 <- latinobarometro %>%
+  filter(anio == 2013) %>%
+  select(trabajo_actual_f, nivel_ed, bienes_lava, bienes_celular, bienes_auto, bienes_cloaca, bienes_aguapot,
+         bienes_aguacal, bienes_casa, wt)
+
+mca2013 <- speMCA(var_obj_2013[,1:9], ncp = 2, row.w = var_obj_2013$wt)
+
+modif.rate(mca2013)$modif
+
+tabcontrib(mca2013, dim = 1, best = T)
+
+ggcloud_variables(mca2013, vlab = T, shapes = T, shapesize = 1.5, force = 2,
                   textsize = 2.3) + 
   labs(title = "MCA 2013")
 
@@ -181,11 +287,17 @@ ggcloud_variables(mca2011, vlab = T, shapes = T, shapesize = 1.5, force = 2,
   labs(title = "MCA 2011")
 
 #Construcción de índice
+mca_coords <- bind_rows(
+  data.frame(anio = 2011, dim1 = mca2011$ind$coord[,1]),
+  data.frame(anio = 2013, dim1 = mca2013$ind$coord[,1]),
+  data.frame(anio = 2016, dim1 = mca2016$ind$coord[,1]),
+  data.frame(anio = 2023, dim1 = mca2023$ind$coord[,1])
+)
+
 latinobarometro2023 <- latinobarometro %>%
-  filter(anio %in% c(2011, 2016, 2023)) %>%
-  mutate(dim1 = ifelse(anio == 2011, mca2011$ind$coord[,1],
-                       ifelse(anio == 2016, mca2016$ind$coord[,1], mca2023$ind$coord[,1])),
-         dim1_std = estandarizar_ponderado(dim1, wt))
+  filter(anio %in% c(2011, 2013, 2016, 2023)) %>%
+  bind_cols(dim1 = mca_coords$dim1) %>%
+  mutate(dim1_std = estandarizar_ponderado(dim1, wt))
 
 latinobarometro2023 %>% 
   group_by(pais_f) %>%
@@ -220,7 +332,7 @@ latinobarometro %>%
         axis.title.y = element_blank(),
         axis.text.x = element_text(angle = 45, hjust = 1),
         legend.title = element_blank()) +
-  scale_y_continuous(limits = c(0, .8), breaks = seq(0, .8, .1), labels = scales::percent_format(accuracy = 1)) +
+  scale_y_continuous(limits = c(0, .25), breaks = seq(0, .25, .05), labels = scales::percent_format(accuracy = 1)) +
   scale_x_continuous(breaks = c(1998, 2003, 2005, 2008, 2009, 2010, 2011, 2013, 2015, 2016, 2023))
 
 ggsave("graficos/tendencias_evasion.png", width = 8, height = 5)
@@ -253,7 +365,7 @@ ggsave("graficos/tendencias_arreglo_impuestos.png", width = 8, height = 5)
 latinobarometro %>%
   group_by(iso3, anio) %>%
   summarise(
-    porcentaje = weighted.mean(evasion_dic3, wt = wt, na.rm = T)) %>%  
+    porcentaje = weighted.mean(evasion_dic2, wt = wt, na.rm = T)) %>%  
   filter(anio == 2023) %>% 
   ggplot(aes(x = fct_reorder(iso3, porcentaje, .desc = T), y = porcentaje, fill = iso3)) +
   geom_bar(stat = "identity", alpha = .8) +
@@ -272,7 +384,7 @@ latinobarometro %>%
   theme(axis.title.x = element_blank(),
         axis.title.y = element_blank(),
         legend.position = "none") +
-  scale_y_continuous(limits = c(0, .8), breaks = seq(0, .8, .1), labels = scales::percent_format(accuracy = 1)) +
+  scale_y_continuous(limits = c(0, .75), breaks = seq(0, .7, .1), labels = scales::percent_format(accuracy = 1)) +
   scale_fill_manual(values = ifelse(levels(latinobarometro$pais_f) == "Arg", "red", "grey")) 
 
 
@@ -345,8 +457,7 @@ correspondencia %>%
        subtitle = "Países de América Latina. 2020 y 2023",
        caption = "Fuente: elaboración propia en base a Latinobarómetro",
        y = "% de evasión impositiva",
-       x = "% de justificación de la evasión") +
-  scale_y_continuous(labels = scales::percent_format(accuracy = 1), breaks = seq(0, .4, 0.05), limits = c(0, .4)) 
+       x = "% de justificación de la evasión")
 
 
 ggsave("graficos/correspondencia_evasion_justificacion.png", width = 8, height = 5)
@@ -729,30 +840,30 @@ ggsave("graficos/evasion_sub_clases_medias.png", width = 8, height = 5)
 
 ### Tabla de descriptivos
 
-```{r message=FALSE, warning=FALSE, results='asis'}
+```{r message=FALSE, warning=FALSE, results='asis', eval=FALSE}
 theme_gtsummary_language("es", decimal.mark = ",", big.mark = ".")
 theme_gtsummary_compact()
 
-latinobarometro2020_2010 %>%
-  svydesign(data = ., ids = ~ 1, weights = ~wt) %>%
-  tbl_svysummary(include = c(edad, sexo2, dim1_std, clase_subjetiva_f, just_dist_ingresos_f, pro_mercado_f, ayuda_pobres_dinero_f, ayuda_gobierno_tramo_f, pago_impuestos_tramo_f, aceptabilidad_desigualdad, arreglo_impuestos),
-                 label = c(edad ~ "Edad", 
-                           sexo2 ~ "Sexo", 
-                           dim1_std ~ "Índice de estratificación", 
-                           clase_subjetiva_f ~ "Clase subjetiva", 
-                           just_dist_ingresos_f ~ "Percepción distribución de ingresos", 
-                           pro_mercado_f ~ "Valoración economía de mercado", 
-                           ayuda_pobres_dinero_f ~ "Apoyo a ayuda en dinero a pobres", 
-                           ayuda_gobierno_tramo_f ~ "Tramo a recibir ayuda del gob.",
-                           pago_impuestos_tramo_f ~ "Tramo a partir del cual se deben pagar impuestos", 
-                           aceptabilidad_desigualdad ~ "Aceptación de la desigualdad", 
-                           arreglo_impuestos ~ "Arreglo para pagar menos impuestos"),
-                 statistic = list(all_continuous() ~ "{mean} ({sd})",
-                                  all_categorical() ~ "{n} ({p}%)"),
-                 digits = list(all_categorical() ~ c(0, 1)),
-                 missing = "no") %>% 
-  as_flex_table() %>% 
-  flextable::save_as_docx(path = "tablas/descriptivos_2020.docx")
+# latinobarometro2020_2010 %>%
+#   svydesign(data = ., ids = ~ 1, weights = ~wt) %>%
+#   tbl_svysummary(include = c(edad, sexo2, dim1_std, clase_subjetiva_f, just_dist_ingresos_f, pro_mercado_f, ayuda_pobres_dinero_f, ayuda_gobierno_tramo_f, pago_impuestos_tramo_f, aceptabilidad_desigualdad, arreglo_impuestos),
+#                  label = c(edad ~ "Edad", 
+#                            sexo2 ~ "Sexo", 
+#                            dim1_std ~ "Índice de estratificación", 
+#                            clase_subjetiva_f ~ "Clase subjetiva", 
+#                            just_dist_ingresos_f ~ "Percepción distribución de ingresos", 
+#                            pro_mercado_f ~ "Valoración economía de mercado", 
+#                            ayuda_pobres_dinero_f ~ "Apoyo a ayuda en dinero a pobres", 
+#                            ayuda_gobierno_tramo_f ~ "Tramo a recibir ayuda del gob.",
+#                            pago_impuestos_tramo_f ~ "Tramo a partir del cual se deben pagar impuestos", 
+#                            aceptabilidad_desigualdad ~ "Aceptación de la desigualdad", 
+#                            arreglo_impuestos ~ "Arreglo para pagar menos impuestos"),
+#                  statistic = list(all_continuous() ~ "{mean} ({sd})",
+#                                   all_categorical() ~ "{n} ({p}%)"),
+#                  digits = list(all_categorical() ~ c(0, 1)),
+#                  missing = "no") %>% 
+#   as_flex_table() %>% 
+#   flextable::save_as_docx(path = "tablas/descriptivos_2020.docx")
 
 latinobarometro2020_2010 %>%
   svydesign(data = ., ids = ~ 1, weights = ~wt) %>%
@@ -781,19 +892,23 @@ as_gt()
 ### Variable objetivo: justificación de la evasión impositiva (2023)
 
 ```{r message=FALSE, warning=FALSE, results='asis', eval=FALSE, include=FALSE}
-
 latinobarometro2023$just_dist_ingresos_f <- relevel(latinobarometro2023$just_dist_ingresos_f, ref = "Muy injusta")
-latinobarometro2023$clase_subjetiva_f <- relevel(latinobarometro2023$clase_subjetiva_f, ref = "Baja")
+latinobarometro2023$clase_subjetiva4 <- relevel(latinobarometro2023$clase_subjetiva4, ref = "Baja")
 latinobarometro2023$pro_mercado_f <- relevel(latinobarometro2023$pro_mercado_f, ref = "Muy de acuerdo")
 latinobarometro2023$pais_f <- relevel(latinobarometro2023$pais_f, ref = "Mex")
 latinobarometro2023$sexo2 <- relevel(latinobarometro2023$sexo2, ref = "Mujer")
+latinobarometro2023$corrupcion_f <- relevel(latinobarometro2023$corrupcion_f, ref = "Nada")
+
+solo2023 <- latinobarometro2023 %>% 
+  filter(anio == 2023) 
 
 mod1_a <- glm(evasion_dic3 ~ edad + sexo2 + dim1_std,
-                 data = latinobarometro2023, weights = wt, family = binomial(link = "logit"))
+                 data = solo2023, weights = wt, family = binomial(link = "logit"))
 
-mod1_b <- glm(evasion_dic3 ~ edad + sexo2 + dim1_std + clase_subjetiva_f + just_dist_ingresos_f + pro_mercado_f, data = latinobarometro2023, weights = wt, family = binomial(link = "logit"))
+mod1_b <- glm(evasion_dic3 ~ edad + sexo2 + dim1_std + clase_subjetiva4 + just_dist_ingresos_f + pro_mercado_f, data = solo2023, weights = wt, family = binomial(link = "logit"))
 
-mod1_c <- glm(evasion_dic3 ~ edad + sexo2 + dim1_std + clase_subjetiva_f + just_dist_ingresos_f + pro_mercado_f + pais_f, data = latinobarometro2023, weights = wt, family = binomial(link = "logit"))
+mod1_c <- glm(evasion_dic3 ~ edad + sexo2 + dim1_std + clase_subjetiva4 + just_dist_ingresos_f + pro_mercado_f + pais_f, data = solo2023, weights = wt, family = binomial(link = "logit"))
+
 
 mod1 <- export_summs(mod1_a, mod1_b, mod1_c, model.names = c("Objetivas", "Objetivas + mediadoras", "Efecto fijo países"), 
                      exp = T, stars = c(`***` = 0.01, `**` = 0.05, `*` = 0.1),
@@ -801,10 +916,9 @@ mod1 <- export_summs(mod1_a, mod1_b, mod1_c, model.names = c("Objetivas", "Objet
                      coefs = c("Edad" = "edad",
                                "Varón" = "sexo2Varón",
                                "Estratificación objetiva" = "dim1_std",
-                               "Clase sub. alta" = "clase_subjetiva_fAlta",
-                               "Clase sub. media alta" = "clase_subjetiva_fMedia alta",
-                               "Clase sub. media" = "clase_subjetiva_fMedia",
-                               "Clase sub. media baja" = "clase_subjetiva_fMedia baja",
+                               "Clase sub. media alta" = "clase_subjetiva4Media alta",
+                               "Clase sub. media" = "clase_subjetiva4Media",
+                               "Clase sub. media baja" = "clase_subjetiva4Media baja",
                                "Justicia dist. muy justa" = "just_dist_ingresos_fMuy justa",
                                "Justicia dist. justa" = "just_dist_ingresos_fJusta",
                                "Justicia dist. injusta" = "just_dist_ingresos_fInjusta",
@@ -816,59 +930,56 @@ mod1 %>%
   set_caption("Modelos de regresión logística. Odds ratios. Evasión impositiva. 2023")
 
 
-reg_coef <- plot_summs(mod1_a, mod1_c, ci_level = 0.91, exp = T,
-                       coefs = c("Edad" = "edad",
-                               "Varón" = "sexo2Varón",
-                               "Estratificación objetiva" = "dim1_std",
-                               "Clase sub. alta" = "clase_subjetiva_fAlta",
-                               "Clase sub. media alta" = "clase_subjetiva_fMedia alta",
-                               "Clase sub. media" = "clase_subjetiva_fMedia",
-                               "Clase sub. media baja" = "clase_subjetiva_fMedia baja",
-                               "Justicia dist. muy justa" = "just_dist_ingresos_fMuy justa",
-                               "Justicia dist. justa" = "just_dist_ingresos_fJusta",
-                               "Justicia dist. injusta" = "just_dist_ingresos_fInjusta",
-                               "Pro mercado De acuerdo" = "pro_mercado_fDe acuerdo",
-                               "Pro mercado en desacuerdo" = "pro_mercado_fEn desacuerdo",
-                               "Pro mercado muy en desacuerdo" = "pro_mercado_fMuy en desacuerdo"))
-
-reg_coef +
-  labs(caption = "Fuente: elaboración propia en base a Latinobarómetro", x = "Razones de momios") +
-  theme(axis.title.y = element_blank(),
-        axis.title.x = element_blank(),
-        axis.text.x = element_text(size = 8),
-        axis.text.y = element_text(size = 10),
-        legend.position= "bottom")
+# reg_coef <- plot_summs(mod1_a, mod1_c, ci_level = 0.91, exp = T,
+#                        coefs = c("Edad" = "edad",
+#                                "Varón" = "sexo2Varón",
+#                                "Estratificación objetiva" = "dim1_std",
+#                                "Clase sub. alta" = "clase_subjetiva_fAlta",
+#                                "Clase sub. media alta" = "clase_subjetiva_fMedia alta",
+#                                "Clase sub. media" = "clase_subjetiva_fMedia",
+#                                "Clase sub. media baja" = "clase_subjetiva_fMedia baja",
+#                                "Justicia dist. muy justa" = "just_dist_ingresos_fMuy justa",
+#                                "Justicia dist. justa" = "just_dist_ingresos_fJusta",
+#                                "Justicia dist. injusta" = "just_dist_ingresos_fInjusta",
+#                                "Pro mercado De acuerdo" = "pro_mercado_fDe acuerdo",
+#                                "Pro mercado en desacuerdo" = "pro_mercado_fEn desacuerdo",
+#                                "Pro mercado muy en desacuerdo" = "pro_mercado_fMuy en desacuerdo"))
+# 
+# reg_coef +
+#   labs(caption = "Fuente: elaboración propia en base a Latinobarómetro", x = "Razones de momios") +
+#   theme(axis.title.y = element_blank(),
+#         axis.title.x = element_blank(),
+#         axis.text.x = element_text(size = 8),
+#         axis.text.y = element_text(size = 10),
+#         legend.position= "bottom")
 ```
 
 
 ### Variable objetivo: evasión impositiva (2020)
 
 ```{r message=FALSE, warning=FALSE, results='asis'}
-# latinobarometro2020_bal <- latinobarometro2020_2010%>%
-#   filter(!is.na(arreglo_impuestos)) %>%
-#   group_by(arreglo_impuestos) %>%
-#   sample_n(size = 5000) %>%
-#   ungroup()
 
 latinobarometro2020_2010$just_dist_ingresos_f <- relevel(latinobarometro2020_2010$just_dist_ingresos_f, ref = "Muy justa")
-latinobarometro2020_2010$clase_subjetiva_f <- relevel(latinobarometro2020_2010$clase_subjetiva_f, ref = "Baja")
+latinobarometro2020_2010$clase_subjetiva4 <- relevel(latinobarometro2020_2010$clase_subjetiva4, ref = "Baja")
 latinobarometro2020_2010$pro_mercado_f <- relevel(latinobarometro2020_2010$pro_mercado_f, ref = "Muy de acuerdo")
 latinobarometro2020_2010$pais_f <- relevel(latinobarometro2020_2010$pais_f, ref = "Mex")
 latinobarometro2020_2010$sexo2 <- relevel(latinobarometro2020_2010$sexo2, ref = "Mujer")
 latinobarometro2020_2010$ayuda_pobres_dinero_f <- relevel(latinobarometro2020_2010$ayuda_pobres_dinero_f, ref = "No")
 latinobarometro2020_2010$ayuda_gobierno_tramo_f <- relevel(latinobarometro2020_2010$ayuda_gobierno_tramo_f, ref = "A ninguno")
 latinobarometro2020_2010$pago_impuestos_tramo_f <- relevel(latinobarometro2020_2010$pago_impuestos_tramo_f, ref = "Ninguno")
+latinobarometro2020_2010$corrupcion_f <- relevel(latinobarometro2020_2010$corrupcion_f, ref = "Nada")
 
 latinobarometro2020_2010$arreglo_impuestos <- as.factor(latinobarometro2020_2010$arreglo_impuestos)
 
-#Dicotomizar variable just distribución de ingresos.
+solo2020 <- latinobarometro2020_2010 %>% 
+  filter(anio == 2020)
 
 mod2_a <- glm(arreglo_impuestos ~ edad + sexo2 + dim1_std,
-                 data = latinobarometro2020_2010, weights = wt, family = binomial(link = "logit"))
+                 data = solo2020, weights = wt, family = binomial(link = "logit"))
 
-mod2_b <- glm(arreglo_impuestos ~ edad + sexo2 + dim1_std + clase_subjetiva_f + just_dist_ingresos_f + pro_mercado_f + ayuda_pobres_dinero_f + ayuda_gobierno_tramo_f + pago_impuestos_tramo_f + aceptabilidad_desigualdad, data = latinobarometro2020_2010, weights = wt, family = binomial(link = "logit"))
+mod2_b <- glm(arreglo_impuestos ~ edad + sexo2 + dim1_std + clase_subjetiva4 + just_dist_ingresos_f + pro_mercado_f + ayuda_pobres_dinero_f + ayuda_gobierno_tramo_f + pago_impuestos_tramo_f + aceptabilidad_desigualdad, data = solo2020, weights = wt, family = binomial(link = "logit"))
 
-mod2_c <- glm(arreglo_impuestos ~ edad + sexo2 + dim1_std + clase_subjetiva_f + just_dist_ingresos_f + pro_mercado_f + ayuda_pobres_dinero_f + ayuda_gobierno_tramo_f + pago_impuestos_tramo_f + aceptabilidad_desigualdad + pais_f, data = latinobarometro2020_2010, weights = wt, family = binomial(link = "logit"), , na.action = na.exclude)
+mod2_c <- glm(arreglo_impuestos ~ edad + sexo2 + dim1_std + clase_subjetiva4 + just_dist_ingresos_f + pro_mercado_f + ayuda_pobres_dinero_f + ayuda_gobierno_tramo_f + pago_impuestos_tramo_f + aceptabilidad_desigualdad + pais_f, data = solo2020, weights = wt, family = binomial(link = "logit"), , na.action = na.exclude)
 
 
 # Realizar matriz de confusión
@@ -879,10 +990,9 @@ mod1 <- export_summs(mod2_a, mod2_b, mod2_c, model.names = c("Objetivas", "Objet
                      coefs = c("Edad" = "edad",
                                "Varón" = "sexo2Varón",
                                "Estratificación objetiva" = "dim1_std",
-                               "Clase sub. alta (ref: Baja)" = "clase_subjetiva_fAlta",
-                               "Clase sub. media alta" = "clase_subjetiva_fMedia alta",
-                               "Clase sub. media" = "clase_subjetiva_fMedia",
-                               "Clase sub. media baja" = "clase_subjetiva_fMedia baja",
+                               "Clase sub. media alta" = "clase_subjetiva4Media alta",
+                               "Clase sub. media" = "clase_subjetiva4Media",
+                               "Clase sub. media baja" = "clase_subjetiva4Media baja",
                                "Justicia dist. justa (ref: Muy justa)" = "just_dist_ingresos_fJusta",
                                "Justicia dist. injusta" = "just_dist_ingresos_fInjusta",
                                "Justicia dist. muy injusta" = "just_dist_ingresos_fMuy injusta",
@@ -898,57 +1008,56 @@ mod1 <- export_summs(mod2_a, mod2_b, mod2_c, model.names = c("Objetivas", "Objet
                                "Impuestos desde tramo medio" = "pago_impuestos_tramo_fMedio",
                                "Impuestos desde tramo alto" = "pago_impuestos_tramo_fAlto",
                                "Impuestos a todos" = "pago_impuestos_tramo_fTodos por igual",
-                               "Aceptabilidad de la desigualdad" = "aceptabilidad_desigualdad"),
-                     to.file = "docx", file.name = "tablas/regresiones_arreglo_impuestos.docx")
+                               "Aceptabilidad de la desigualdad" = "aceptabilidad_desigualdad"))
 
 mod1 %>% 
   set_caption("Modelos de regresión logística. Odds ratios. Evasión impositiva. 2020")
 
 
-reg_coef <- plot_summs(mod2_a, mod2_b, mod2_c, ci_level = 0.91, 
-                       model.names = c("Objetivas", "Objetivas + Subjetivas", "Objetivas + Subjetivas + Países"), 
-                       point.size = 2,
-                       line.size = c(0.5, 1),
-                       exp = T,
-                       coefs = c("Edad" = "edad",
-                               "Varón" = "sexo2Varón",
-                               "Estratificación objetiva" = "dim1_std",
-                               "Clase sub. alta (ref: Baja)" = "clase_subjetiva_fAlta",
-                               "Clase sub. media alta" = "clase_subjetiva_fMedia alta",
-                               "Clase sub. media" = "clase_subjetiva_fMedia",
-                               "Clase sub. media baja" = "clase_subjetiva_fMedia baja",
-                               "Distribución justa (ref: Muy justa)" = "just_dist_ingresos_fJusta",
-                               "Distribución injusta" = "just_dist_ingresos_fInjusta",
-                               "Distribución muy injusta" = "just_dist_ingresos_fMuy injusta",
-                               "Pro mercado de acuerdo (ref: Muy de acuerdo)" = "pro_mercado_fDe acuerdo",
-                               "Pro mercado en desacuerdo" = "pro_mercado_fEn desacuerdo",
-                               "Pro mercado muy en desacuerdo" = "pro_mercado_fMuy en desacuerdo",
-                               "Ayudar con dinero a pobres" = "ayuda_pobres_dinero_fSi",
-                               "Ayuda gob. tramo bajo (ref: A ninguno)" = "ayuda_gobierno_tramo_fBajo",
-                               "Ayuda gob. tramo medio" = "ayuda_gobierno_tramo_fMedio",
-                               "Ayuda gob. tramo alto" = "ayuda_gobierno_tramo_fAlto",
-                               "Ayuda gob. a todos" = "ayuda_gobierno_tramo_fA todos por igual",
-                               "Impuestos desde tramo bajo (ref: A ninguno)" = "pago_impuestos_tramo_fBajo",
-                               "Impuestos desde tramo medio" = "pago_impuestos_tramo_fMedio",
-                               "Impuestos desde tramo alto" = "pago_impuestos_tramo_fAlto",
-                               "Impuestos a todos" = "pago_impuestos_tramo_fTodos por igual",
-                               "Aceptabilidad de la desigualdad" = "aceptabilidad_desigualdad"))
-
-reg_coef +
-  labs(title ="Modelos de regresión logística. \nArreglo para pagar menos impuestos. 2020",
-       subtitle ="Coeficientes exponenciados",
-       caption = "Fuente: elaboración propia en base a Latinobarómetro", 
-       x = "Razones de momios") +
-  theme(axis.title.y = element_blank(),
-        axis.title.x = element_blank(),
-        axis.text.x = element_text(size = 10),
-        axis.text.y = element_text(size = 12),
-        legend.position= "bottom",
-        legend.title = element_blank()) +
-  scale_x_continuous(limits = c(0.5, 2), breaks = seq(0.5, 2, .1))
-
-
-ggsave("graficos/regresiones_arreglo_impuestos.png", width = 10, height = 6)
+# reg_coef <- plot_summs(mod2_a, mod2_b, mod2_c, ci_level = 0.91, 
+#                        model.names = c("Objetivas", "Objetivas + Subjetivas", "Objetivas + Subjetivas + Países"), 
+#                        point.size = 2,
+#                        line.size = c(0.5, 1),
+#                        exp = T,
+#                        coefs = c("Edad" = "edad",
+#                                "Varón" = "sexo2Varón",
+#                                "Estratificación objetiva" = "dim1_std",
+#                                "Clase sub. alta (ref: Baja)" = "clase_subjetiva_fAlta",
+#                                "Clase sub. media alta" = "clase_subjetiva_fMedia alta",
+#                                "Clase sub. media" = "clase_subjetiva_fMedia",
+#                                "Clase sub. media baja" = "clase_subjetiva_fMedia baja",
+#                                "Distribución justa (ref: Muy justa)" = "just_dist_ingresos_fJusta",
+#                                "Distribución injusta" = "just_dist_ingresos_fInjusta",
+#                                "Distribución muy injusta" = "just_dist_ingresos_fMuy injusta",
+#                                "Pro mercado de acuerdo (ref: Muy de acuerdo)" = "pro_mercado_fDe acuerdo",
+#                                "Pro mercado en desacuerdo" = "pro_mercado_fEn desacuerdo",
+#                                "Pro mercado muy en desacuerdo" = "pro_mercado_fMuy en desacuerdo",
+#                                "Ayudar con dinero a pobres" = "ayuda_pobres_dinero_fSi",
+#                                "Ayuda gob. tramo bajo (ref: A ninguno)" = "ayuda_gobierno_tramo_fBajo",
+#                                "Ayuda gob. tramo medio" = "ayuda_gobierno_tramo_fMedio",
+#                                "Ayuda gob. tramo alto" = "ayuda_gobierno_tramo_fAlto",
+#                                "Ayuda gob. a todos" = "ayuda_gobierno_tramo_fA todos por igual",
+#                                "Impuestos desde tramo bajo (ref: A ninguno)" = "pago_impuestos_tramo_fBajo",
+#                                "Impuestos desde tramo medio" = "pago_impuestos_tramo_fMedio",
+#                                "Impuestos desde tramo alto" = "pago_impuestos_tramo_fAlto",
+#                                "Impuestos a todos" = "pago_impuestos_tramo_fTodos por igual",
+#                                "Aceptabilidad de la desigualdad" = "aceptabilidad_desigualdad"))
+# 
+# reg_coef +
+#   labs(title ="Modelos de regresión logística. \nArreglo para pagar menos impuestos. 2020",
+#        subtitle ="Coeficientes exponenciados",
+#        caption = "Fuente: elaboración propia en base a Latinobarómetro", 
+#        x = "Razones de momios") +
+#   theme(axis.title.y = element_blank(),
+#         axis.title.x = element_blank(),
+#         axis.text.x = element_text(size = 10),
+#         axis.text.y = element_text(size = 12),
+#         legend.position= "bottom",
+#         legend.title = element_blank()) +
+#   scale_x_continuous(limits = c(0.5, 2), breaks = seq(0.5, 2, .1))
+# 
+# 
+# ggsave("graficos/regresiones_arreglo_impuestos.png", width = 10, height = 6)
 
 ```
 
@@ -959,16 +1068,16 @@ ggsave("graficos/regresiones_arreglo_impuestos.png", width = 10, height = 6)
 
 ```{r message=FALSE, warning=FALSE, results='asis'}
 latinobarometro2023$just_dist_ingresos_f <- relevel(latinobarometro2023$just_dist_ingresos_f, ref = "Muy injusta")
-latinobarometro2023$clase_subjetiva_f <- relevel(latinobarometro2023$clase_subjetiva_f, ref = "Baja")
+latinobarometro2023$clase_subjetiva4 <- relevel(latinobarometro2023$clase_subjetiva4, ref = "Baja")
 latinobarometro2023$pro_mercado_f <- relevel(latinobarometro2023$pro_mercado_f, ref = "Muy de acuerdo")
 latinobarometro2023$pais_f <- relevel(latinobarometro2023$pais_f, ref = "Mex")
 latinobarometro2023$sexo2 <- relevel(latinobarometro2023$sexo2, ref = "Mujer")
-
+latinobarometro2023$corrupcion_f <- relevel(latinobarometro2023$corrupcion_f, ref = "Nada")
 
 #Modelo nulo
 
 multi_just <- latinobarometro2023 %>% 
-  filter(!pais_f %in% c("Ven", "Nic"), anio == 2023)
+  filter(!pais_f %in% c("Ven", "Nic"), anio !=2016)
 
 mod1_sub <- glmer(evasion_dic3 ~ 1 + (1 | anio_pais), data = multi_just, family = binomial(link = "logit"), weights = wt)
 
@@ -976,14 +1085,14 @@ icc_mod1 <- icc(mod1_sub)
 print(icc_mod1)
 
 mod2_sub <- glmer(evasion_dic3 ~ edad + sexo2 + dim1_std + 
-                           clase_subjetiva_f + just_dist_ingresos_f + pro_mercado_f + 
+                           clase_subjetiva4 + just_dist_ingresos_f + pro_mercado_f + corrupcion_f + 
                            (1 | anio_pais),
                            data = multi_just,
                            weights = wt,
                            family = binomial(link = "logit"))
 
 mod3_sub <- glmer(evasion_dic3 ~ edad + sexo2 + dim1_std + 
-                           clase_subjetiva_f + just_dist_ingresos_f + pro_mercado_f +
+                           clase_subjetiva4 + just_dist_ingresos_f + pro_mercado_f + corrupcion_f +
                     pib_ppa + informalidad + impuestos_tot_cs + gini + ocupaciones_medias + 
                            (1 | anio_pais),
                            data = multi_just,
@@ -1008,33 +1117,161 @@ tab_model(mod1_sub, mod2_sub, mod3_sub, transform = "exp", p.style = "stars",
 ### Arreglos para evadir
 ```{r message=FALSE, warning=FALSE, results='asis'}
 latinobarometro2020_2010$just_dist_ingresos_f <- relevel(latinobarometro2020_2010$just_dist_ingresos_f, ref = "Muy justa")
-latinobarometro2020_2010$clase_subjetiva_f <- relevel(latinobarometro2020_2010$clase_subjetiva_f, ref = "Baja")
+latinobarometro2020_2010$clase_subjetiva4 <- relevel(latinobarometro2020_2010$clase_subjetiva4, ref = "Baja")
 latinobarometro2020_2010$pro_mercado_f <- relevel(latinobarometro2020_2010$pro_mercado_f, ref = "Muy de acuerdo")
 latinobarometro2020_2010$pais_f <- relevel(latinobarometro2020_2010$pais_f, ref = "Mex")
 latinobarometro2020_2010$sexo2 <- relevel(latinobarometro2020_2010$sexo2, ref = "Mujer")
+latinobarometro2020_2010$corrupcion_f <- relevel(latinobarometro2020_2010$corrupcion_f, ref = "Nada")
+latinobarometro2020_2010$estatus_sub <- scale(latinobarometro2020_2010$escala_pobriq_personal, center = T)
+latinobarometro2020_2010$edad_c <- scale(latinobarometro2020_2010$edad, center = T)
 
-latinobarometro2020_2010$arreglo_impuestos <- as.factor(latinobarometro2020_2010$arreglo_impuestos)
+multi_arreglo <- latinobarometro2020_2010 %>% 
+  filter(!pais_f %in% c("Ven", "Nic"))
 
 
 #Modelo nulo
-mod1 <- glmer(arreglo_impuestos ~ 1 + (1 | anio_pais), data = latinobarometro2020_2010, family = binomial(link = "logit"), weights = wt)
+mod1 <- glmer(arreglo_impuestos ~ 1 + (1 | anio_pais), data = multi_arreglo, family = binomial(link = "logit"), weights = wt)
 
 icc_mod1 <- icc(mod1)
 print(icc_mod1)
 
-mod2 <- glmer(arreglo_impuestos ~ edad + sexo2 + dim1_std + just_dist_ingresos_f + pro_mercado_f + (1 | anio_pais), data = latinobarometro2020_2010, family = binomial(link = "logit"), weights = wt)
+mod2 <- glmer(arreglo_impuestos ~ edad_c + sexo2 + dim1_std + estatus_sub + just_dist_ingresos_f + pro_mercado_f + corrupcion_f + (1 | anio_pais), data = multi_arreglo, family = binomial(link = "logit"), weights = wt)
 
-mod3 <- glmer(arreglo_impuestos ~ edad + sexo2 + dim1_std + just_dist_ingresos_f + pro_mercado_f + 
-                pib_ppa + informalidad + impuestos_tot_cs + (1 | anio_pais), data = latinobarometro2020_2010, family = binomial(link = "logit"), weights = wt)
+mod3 <- glmer(arreglo_impuestos ~ edad_c + sexo2 + dim1_std + estatus_sub + just_dist_ingresos_f + pro_mercado_f + corrupcion_f + 
+                pib_ppa + informalidad + impuestos_tot_cs + (1 | anio_pais), data = multi_arreglo, family = binomial(link = "logit"), weights = wt)
 
 # check_collinearity(mod3)
 # 
-# compare_performance(mod1, mod2, mod3)
+compare_performance(mod1, mod2, mod3)
 
-tab_model(mod1, mod2, mod3,
+tab_model(mod1, mod2, mod3, p.style = "stars",
              show.ci = F,
-             show.icc = T,
-             show.aic = T)
+             show.icc = FALSE,
+             show.aic = T,
+          p.threshold = c(0.1, 0.05, 0.01))
 
 ```
+
+
+## Modelos por cluster
+
+```{r justificación evasion cluster, message=FALSE, warning=FALSE, results='asis'}
+
+latinobarometro2023$just_dist_ingresos_f <- relevel(latinobarometro2023$just_dist_ingresos_f, ref = "Muy injusta")
+latinobarometro2023$clase_subjetiva4 <- relevel(latinobarometro2023$clase_subjetiva4, ref = "Baja")
+latinobarometro2023$pro_mercado_f <- relevel(latinobarometro2023$pro_mercado_f, ref = "Muy de acuerdo")
+latinobarometro2023$pais_f <- relevel(latinobarometro2023$pais_f, ref = "Mex")
+latinobarometro2023$sexo2 <- relevel(latinobarometro2023$sexo2, ref = "Mujer")
+latinobarometro2023$anio_f <- factor(latinobarometro2023$anio, levels = c(2011, 2013, 2016, 2023))
+
+
+
+grupo1 <- subset(latinobarometro2023, cluster == "Grupo 1" & anio != 2016)
+grupo2 <- subset(latinobarometro2023, cluster == "Grupo 2" & anio != 2016)
+grupo3 <- subset(latinobarometro2023, cluster == "Grupo 3" & anio != 2016)
+
+mod1 <- glm(evasion_dic2 ~ edad + sexo2 + dim1_std + clase_subjetiva4 + just_dist_ingresos_f + pro_mercado_f + anio_f,
+            data = grupo1, 
+            weights = wt, 
+            family = binomial(link = "logit"))
+
+mod2 <- glm(evasion_dic2 ~ edad + sexo2 + dim1_std + clase_subjetiva4 + just_dist_ingresos_f + pro_mercado_f + anio_f,
+            data = grupo2,
+            weights = wt, 
+            family = binomial(link = "logit"))
+            
+mod3 <- glm(evasion_dic2 ~ edad + sexo2 + dim1_std + clase_subjetiva4 + just_dist_ingresos_f + pro_mercado_f + anio_f,
+            data = grupo3,
+            weights = wt, 
+            family = binomial(link = "logit"))
+
+
+
+mod <- export_summs(mod1, mod2, mod3, model.names = c("Grupo 1", "Grupo 2", "Grupo 3"), 
+                     exp = T, stars = c(`***` = 0.01, `**` = 0.05, `*` = 0.1),
+                     error_pos = "below",
+                     coefs = c("Edad" = "edad",
+                               "Varón" = "sexo2Varón",
+                               "Estratificación objetiva" = "dim1_std",
+                               "Clase sub. media alta" = "clase_subjetiva4Media alta",
+                               "Clase sub. media" = "clase_subjetiva4Media",
+                               "Clase sub. media baja" = "clase_subjetiva4Media baja",
+                               "Justicia dist. muy justa" = "just_dist_ingresos_fMuy justa",
+                               "Justicia dist. justa" = "just_dist_ingresos_fJusta",
+                               "Justicia dist. injusta" = "just_dist_ingresos_fInjusta",
+                               "Pro mercado De acuerdo" = "pro_mercado_fDe acuerdo",
+                               "Pro mercado en desacuerdo" = "pro_mercado_fEn desacuerdo",
+                               "Pro mercado muy en desacuerdo" = "pro_mercado_fMuy en desacuerdo",
+                               "2023" = "anio_f2023",
+                               "2013" = "anio_f2013"
+                               ))
+
+mod %>% 
+  set_caption("Modelos de regresión logística. Odds ratios. Justificación evasión impositiva. 2011-2013-2023")
+
+
+```
+
+
+```{r evasion cluster, essage=FALSE, warning=FALSE, results='asis'}
+
+latinobarometro2020_2010$just_dist_ingresos_f <- relevel(latinobarometro2020_2010$just_dist_ingresos_f, ref = "Muy justa")
+latinobarometro2020_2010$clase_subjetiva_f <- relevel(latinobarometro2020_2010$clase_subjetiva_f, ref = "Baja")
+latinobarometro2020_2010$pro_mercado_f <- relevel(latinobarometro2020_2010$pro_mercado_f, ref = "Muy de acuerdo")
+latinobarometro2020_2010$pais_f <- relevel(latinobarometro2020_2010$pais_f, ref = "Mex")
+latinobarometro2020_2010$sexo2 <- relevel(latinobarometro2020_2010$sexo2, ref = "Mujer")
+latinobarometro2020_2010$ayuda_pobres_dinero_f <- relevel(latinobarometro2020_2010$ayuda_pobres_dinero_f, ref = "No")
+latinobarometro2020_2010$ayuda_gobierno_tramo_f <- relevel(latinobarometro2020_2010$ayuda_gobierno_tramo_f, ref = "A ninguno")
+latinobarometro2020_2010$pago_impuestos_tramo_f <- relevel(latinobarometro2020_2010$pago_impuestos_tramo_f, ref = "Ninguno")
+latinobarometro2020_2010$anio_f <- factor(latinobarometro2020_2010$anio, levels = c("2010", "2020"))
+latinobarometro2020_2010$estatus_sub <- scale(latinobarometro2020_2010$escala_pobriq_personal)
+
+#Dicotomizar variable just distribución de ingresos.
+
+grupo1 <- subset(latinobarometro2020_2010, cluster == "Grupo 1" & anio == 2020)
+grupo2 <- subset(latinobarometro2020_2010, cluster == "Grupo 2" & anio == 2020)
+grupo3 <- subset(latinobarometro2020_2010, cluster == "Grupo 3" & anio == 2020)
+
+
+
+mod2_a <- glm(arreglo_impuestos ~ edad + sexo2 + dim1_std + estatus_sub + just_dist_ingresos_f + pro_mercado_f + ayuda_pobres_dinero_f + ayuda_gobierno_tramo_f + pago_impuestos_tramo_f + aceptabilidad_desigualdad
+              , data = grupo1, weights = wt, family = binomial(link = "logit"), na.action = na.exclude)
+
+mod2_b <- glm(arreglo_impuestos ~ edad + sexo2 + dim1_std + estatus_sub + just_dist_ingresos_f + pro_mercado_f + ayuda_pobres_dinero_f + ayuda_gobierno_tramo_f + pago_impuestos_tramo_f + aceptabilidad_desigualdad
+              , data = grupo2, weights = wt, family = binomial(link = "logit"), na.action = na.exclude)
+
+mod2_c <- glm(arreglo_impuestos ~ edad + sexo2 + dim1_std + estatus_sub + just_dist_ingresos_f + pro_mercado_f + ayuda_pobres_dinero_f + ayuda_gobierno_tramo_f + pago_impuestos_tramo_f + aceptabilidad_desigualdad
+              , data = grupo3, weights = wt, family = binomial(link = "logit"), na.action = na.exclude)
+
+
+
+mod1 <- export_summs(mod2_a, mod2_b, mod2_c, model.names = c("Grupo 1", "Grupo 2", "Grupo 3"), 
+                     exp = T, stars = c(`***` = 0.01, `**` = 0.05, `*` = 0.1),
+                     error_pos = "same",
+                     coefs = c("Edad" = "edad",
+                               "Varón" = "sexo2Varón",
+                               "Estratificación objetiva" = "dim1_std",
+                               "Estratificación subjetiva" = "estatus_sub",
+                               "Justicia dist. justa (ref: Muy justa)" = "just_dist_ingresos_fJusta",
+                               "Justicia dist. injusta" = "just_dist_ingresos_fInjusta",
+                               "Justicia dist. muy injusta" = "just_dist_ingresos_fMuy injusta",
+                               "Pro mercado De acuerdo (ref: Muy de acuerdo)" = "pro_mercado_fDe acuerdo",
+                               "Pro mercado en desacuerdo" = "pro_mercado_fEn desacuerdo",
+                               "Pro mercado muy en desacuerdo" = "pro_mercado_fMuy en desacuerdo",
+                               "Ayudar con dinero a pobres" = "ayuda_pobres_dinero_fSi",
+                               "Ayuda gob. tramo bajo (ref: A ninguno)" = "ayuda_gobierno_tramo_fBajo",
+                               "Ayuda gob. tramo medio" = "ayuda_gobierno_tramo_fMedio",
+                               "Ayuda gob. tramo alto" = "ayuda_gobierno_tramo_fAlto",
+                               "Ayuda gob. a todos" = "ayuda_gobierno_tramo_fA todos por igual",
+                               "Impuestos desde tramo bajo (ref: A ninguno)" = "pago_impuestos_tramo_fBajo",
+                               "Impuestos desde tramo medio" = "pago_impuestos_tramo_fMedio",
+                               "Impuestos desde tramo alto" = "pago_impuestos_tramo_fAlto",
+                               "Impuestos a todos" = "pago_impuestos_tramo_fTodos por igual",
+                               "Aceptabilidad de la desigualdad" = "aceptabilidad_desigualdad"))
+
+mod1 %>% 
+  set_caption("Modelos de regresión logística. Odds ratios. Evasión impositiva. 2020")
+```
+
+
 
