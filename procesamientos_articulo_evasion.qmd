@@ -37,13 +37,7 @@ latinobarometro <- latinobarometro %>%
                                             pro_mercado_f == "De acuerdo" ~ "De acuerdo",
                                             pro_mercado_f == "En desacuerdo" ~ "En desacuerdo",
                                             pro_mercado_f == "Muy en desacuerdo" ~ "En desacuerdo",
-                                            TRUE ~ NA_character_)),
-         clase_subjetiva4 = factor(case_when(clase_subjetiva == 1 | clase_subjetiva == 2 ~ "Media alta",
-                                              clase_subjetiva == 3 ~ "Media",
-                                              clase_subjetiva == 4 ~ "Media baja",
-                                              clase_subjetiva == 5 ~ "Baja",
-                                              TRUE ~ NA_character_),
-                                   levels = c("Media alta", "Media", "Media baja", "Baja"))) %>% 
+                                            TRUE ~ NA_character_))) %>% 
   filter(pais_f != "Esp")
 
 
@@ -959,9 +953,9 @@ mod1 %>%
 
 ```{r message=FALSE, warning=FALSE, results='asis'}
 
-latinobarometro2020_2010$just_dist_ingresos_f <- relevel(latinobarometro2020_2010$just_dist_ingresos_f, ref = "Muy justa")
+latinobarometro2020_2010$just_dist_ingresos_dic <- relevel(latinobarometro2020_2010$just_dist_ingresos_dic, ref = "Justa")
 latinobarometro2020_2010$clase_subjetiva4 <- relevel(latinobarometro2020_2010$clase_subjetiva4, ref = "Baja")
-latinobarometro2020_2010$pro_mercado_f <- relevel(latinobarometro2020_2010$pro_mercado_f, ref = "Muy de acuerdo")
+latinobarometro2020_2010$pro_mercado_dic <- relevel(latinobarometro2020_2010$pro_mercado_dic, ref = "De acuerdo")
 latinobarometro2020_2010$pais_f <- relevel(latinobarometro2020_2010$pais_f, ref = "Mex")
 latinobarometro2020_2010$sexo2 <- relevel(latinobarometro2020_2010$sexo2, ref = "Mujer")
 latinobarometro2020_2010$ayuda_pobres_dinero_f <- relevel(latinobarometro2020_2010$ayuda_pobres_dinero_f, ref = "No")
@@ -977,9 +971,9 @@ solo2020 <- latinobarometro2020_2010 %>%
 mod2_a <- glm(arreglo_impuestos ~ edad + sexo2 + dim1_std,
                  data = solo2020, weights = wt, family = binomial(link = "logit"))
 
-mod2_b <- glm(arreglo_impuestos ~ edad + sexo2 + dim1_std + clase_subjetiva4 + just_dist_ingresos_f + pro_mercado_f + ayuda_pobres_dinero_f + ayuda_gobierno_tramo_f + pago_impuestos_tramo_f + aceptabilidad_desigualdad, data = solo2020, weights = wt, family = binomial(link = "logit"))
+mod2_b <- glm(arreglo_impuestos ~ edad + sexo2 + dim1_std + clase_subjetiva4 + just_dist_ingresos_dic + pro_mercado_dic + ayuda_pobres_dinero_f + ayuda_gobierno_tramo_f + pago_impuestos_tramo_f + aceptabilidad_desigualdad + corrupcion_f, data = solo2020, weights = wt, family = binomial(link = "logit"))
 
-mod2_c <- glm(arreglo_impuestos ~ edad + sexo2 + dim1_std + clase_subjetiva4 + just_dist_ingresos_f + pro_mercado_f + ayuda_pobres_dinero_f + ayuda_gobierno_tramo_f + pago_impuestos_tramo_f + aceptabilidad_desigualdad + pais_f, data = solo2020, weights = wt, family = binomial(link = "logit"), , na.action = na.exclude)
+mod2_c <- glm(arreglo_impuestos ~ edad + sexo2 + dim1_std + clase_subjetiva4 + just_dist_ingresos_dic + pro_mercado_dic + ayuda_pobres_dinero_f + ayuda_gobierno_tramo_f + pago_impuestos_tramo_f + aceptabilidad_desigualdad + corrupcion_f + pais_f, data = solo2020, weights = wt, family = binomial(link = "logit"), , na.action = na.exclude)
 
 
 # Realizar matriz de confusión
@@ -993,12 +987,8 @@ mod1 <- export_summs(mod2_a, mod2_b, mod2_c, model.names = c("Objetivas", "Objet
                                "Clase sub. media alta" = "clase_subjetiva4Media alta",
                                "Clase sub. media" = "clase_subjetiva4Media",
                                "Clase sub. media baja" = "clase_subjetiva4Media baja",
-                               "Justicia dist. justa (ref: Muy justa)" = "just_dist_ingresos_fJusta",
-                               "Justicia dist. injusta" = "just_dist_ingresos_fInjusta",
-                               "Justicia dist. muy injusta" = "just_dist_ingresos_fMuy injusta",
-                               "Pro mercado De acuerdo (ref: Muy de acuerdo)" = "pro_mercado_fDe acuerdo",
-                               "Pro mercado en desacuerdo" = "pro_mercado_fEn desacuerdo",
-                               "Pro mercado muy en desacuerdo" = "pro_mercado_fMuy en desacuerdo",
+                               "Justicia distribución (ref: Justa)" = "just_dist_ingresos_dicMuy injusta",
+                               "Pro mercado (ref: De acuerdo)" = "pro_mercado_dicEn desacuerdo",
                                "Ayudar con dinero a pobres" = "ayuda_pobres_dinero_fSi",
                                "Ayuda gob. tramo bajo (ref: A ninguno)" = "ayuda_gobierno_tramo_fBajo",
                                "Ayuda gob. tramo medio" = "ayuda_gobierno_tramo_fMedio",
@@ -1008,7 +998,11 @@ mod1 <- export_summs(mod2_a, mod2_b, mod2_c, model.names = c("Objetivas", "Objet
                                "Impuestos desde tramo medio" = "pago_impuestos_tramo_fMedio",
                                "Impuestos desde tramo alto" = "pago_impuestos_tramo_fAlto",
                                "Impuestos a todos" = "pago_impuestos_tramo_fTodos por igual",
-                               "Aceptabilidad de la desigualdad" = "aceptabilidad_desigualdad"))
+                               "Aceptabilidad de la desigualdad" = "aceptabilidad_desigualdad",
+                               "Corrupción Poco" = "corrupcion_fPoco",
+                               "Corrupción Algo" = "corrupcion_fAlgo",
+                               "Corrupción Mucho" = "corrupcion_fMucho"
+                               ))
 
 mod1 %>% 
   set_caption("Modelos de regresión logística. Odds ratios. Evasión impositiva. 2020")
