@@ -885,10 +885,10 @@ as_gt()
 
 ### Variable objetivo: justificación de la evasión impositiva (2023)
 
-```{r message=FALSE, warning=FALSE, results='asis', eval=FALSE, include=FALSE}
-latinobarometro2023$just_dist_ingresos_f <- relevel(latinobarometro2023$just_dist_ingresos_f, ref = "Muy injusta")
+```{r message=FALSE, warning=FALSE, results='asis', eval=TRUE}
+latinobarometro2023$just_dist_ingresos_dic <- relevel(latinobarometro2023$just_dist_ingresos_dic, ref = "Justa")
 latinobarometro2023$clase_subjetiva4 <- relevel(latinobarometro2023$clase_subjetiva4, ref = "Baja")
-latinobarometro2023$pro_mercado_f <- relevel(latinobarometro2023$pro_mercado_f, ref = "Muy de acuerdo")
+latinobarometro2023$pro_mercado_dic <- relevel(latinobarometro2023$pro_mercado_dic, ref = "De acuerdo")
 latinobarometro2023$pais_f <- relevel(latinobarometro2023$pais_f, ref = "Mex")
 latinobarometro2023$sexo2 <- relevel(latinobarometro2023$sexo2, ref = "Mujer")
 latinobarometro2023$corrupcion_f <- relevel(latinobarometro2023$corrupcion_f, ref = "Nada")
@@ -896,12 +896,12 @@ latinobarometro2023$corrupcion_f <- relevel(latinobarometro2023$corrupcion_f, re
 solo2023 <- latinobarometro2023 %>% 
   filter(anio == 2023) 
 
-mod1_a <- glm(evasion_dic3 ~ edad + sexo2 + dim1_std,
+mod1_a <- glm(evasion_dic2 ~ edad + sexo2 + dim1_std,
                  data = solo2023, weights = wt, family = binomial(link = "logit"))
 
-mod1_b <- glm(evasion_dic3 ~ edad + sexo2 + dim1_std + clase_subjetiva4 + just_dist_ingresos_f + pro_mercado_f, data = solo2023, weights = wt, family = binomial(link = "logit"))
+mod1_b <- glm(evasion_dic2 ~ edad + sexo2 + dim1_std + clase_subjetiva4 + just_dist_ingresos_dic + pro_mercado_dic, data = solo2023, weights = wt, family = binomial(link = "logit"))
 
-mod1_c <- glm(evasion_dic3 ~ edad + sexo2 + dim1_std + clase_subjetiva4 + just_dist_ingresos_f + pro_mercado_f + pais_f, data = solo2023, weights = wt, family = binomial(link = "logit"))
+mod1_c <- glm(evasion_dic2 ~ edad + sexo2 + dim1_std + clase_subjetiva4 + just_dist_ingresos_dic + pro_mercado_dic + corrupcion_f + pais_f, data = solo2023, weights = wt, family = binomial(link = "logit"))
 
 
 mod1 <- export_summs(mod1_a, mod1_b, mod1_c, model.names = c("Objetivas", "Objetivas + mediadoras", "Efecto fijo países"), 
@@ -913,12 +913,12 @@ mod1 <- export_summs(mod1_a, mod1_b, mod1_c, model.names = c("Objetivas", "Objet
                                "Clase sub. media alta" = "clase_subjetiva4Media alta",
                                "Clase sub. media" = "clase_subjetiva4Media",
                                "Clase sub. media baja" = "clase_subjetiva4Media baja",
-                               "Justicia dist. muy justa" = "just_dist_ingresos_fMuy justa",
-                               "Justicia dist. justa" = "just_dist_ingresos_fJusta",
-                               "Justicia dist. injusta" = "just_dist_ingresos_fInjusta",
-                               "Pro mercado De acuerdo" = "pro_mercado_fDe acuerdo",
-                               "Pro mercado en desacuerdo" = "pro_mercado_fEn desacuerdo",
-                               "Pro mercado muy en desacuerdo" = "pro_mercado_fMuy en desacuerdo"))
+                               "Distribución muy injusta" = "just_dist_ingresos_dicMuy injusta",
+                               "En desacuerdo mercado" = "pro_mercado_dicEn desacuerdo",
+                               "Corrupción Poco" = "corrupcion_fPoco",
+                               "Corrupción Algo" = "corrupcion_fAlgo",
+                               "Corrupción Mucho" = "corrupcion_fMucho"
+                                                             ))
 
 mod1 %>% 
   set_caption("Modelos de regresión logística. Odds ratios. Evasión impositiva. 2023")
@@ -951,7 +951,7 @@ mod1 %>%
 
 ### Variable objetivo: evasión impositiva (2020)
 
-```{r message=FALSE, warning=FALSE, results='asis'}
+```{r message=FALSE, warning=FALSE, results='asis', eval=TRUE}
 
 latinobarometro2020_2010$just_dist_ingresos_dic <- relevel(latinobarometro2020_2010$just_dist_ingresos_dic, ref = "Justa")
 latinobarometro2020_2010$clase_subjetiva4 <- relevel(latinobarometro2020_2010$clase_subjetiva4, ref = "Baja")
@@ -987,8 +987,8 @@ mod1 <- export_summs(mod2_a, mod2_b, mod2_c, model.names = c("Objetivas", "Objet
                                "Clase sub. media alta" = "clase_subjetiva4Media alta",
                                "Clase sub. media" = "clase_subjetiva4Media",
                                "Clase sub. media baja" = "clase_subjetiva4Media baja",
-                               "Justicia distribución (ref: Justa)" = "just_dist_ingresos_dicMuy injusta",
-                               "Pro mercado (ref: De acuerdo)" = "pro_mercado_dicEn desacuerdo",
+                               "Distribución muy injusta" = "just_dist_ingresos_dicMuy injusta",
+                               "En desacuerdo mercado" = "pro_mercado_dicEn desacuerdo",
                                "Ayudar con dinero a pobres" = "ayuda_pobres_dinero_fSi",
                                "Ayuda gob. tramo bajo (ref: A ninguno)" = "ayuda_gobierno_tramo_fBajo",
                                "Ayuda gob. tramo medio" = "ayuda_gobierno_tramo_fMedio",
@@ -1060,7 +1060,7 @@ mod1 %>%
 
 ### Justificación de la evasión
 
-```{r message=FALSE, warning=FALSE, results='asis'}
+```{r message=FALSE, warning=FALSE, results='asis', eval=FALSE, include=FALSE}
 latinobarometro2023$just_dist_ingresos_f <- relevel(latinobarometro2023$just_dist_ingresos_f, ref = "Muy injusta")
 latinobarometro2023$clase_subjetiva4 <- relevel(latinobarometro2023$clase_subjetiva4, ref = "Baja")
 latinobarometro2023$pro_mercado_f <- relevel(latinobarometro2023$pro_mercado_f, ref = "Muy de acuerdo")
@@ -1109,13 +1109,7 @@ tab_model(mod1_sub, mod2_sub, mod3_sub, transform = "exp", p.style = "stars",
 
 
 ### Arreglos para evadir
-```{r message=FALSE, warning=FALSE, results='asis'}
-latinobarometro2020_2010$just_dist_ingresos_f <- relevel(latinobarometro2020_2010$just_dist_ingresos_f, ref = "Muy justa")
-latinobarometro2020_2010$clase_subjetiva4 <- relevel(latinobarometro2020_2010$clase_subjetiva4, ref = "Baja")
-latinobarometro2020_2010$pro_mercado_f <- relevel(latinobarometro2020_2010$pro_mercado_f, ref = "Muy de acuerdo")
-latinobarometro2020_2010$pais_f <- relevel(latinobarometro2020_2010$pais_f, ref = "Mex")
-latinobarometro2020_2010$sexo2 <- relevel(latinobarometro2020_2010$sexo2, ref = "Mujer")
-latinobarometro2020_2010$corrupcion_f <- relevel(latinobarometro2020_2010$corrupcion_f, ref = "Nada")
+```{r message=FALSE, warning=FALSE, results='asis', eval=FALSE, include=FALSE}
 latinobarometro2020_2010$estatus_sub <- scale(latinobarometro2020_2010$escala_pobriq_personal, center = T)
 latinobarometro2020_2010$edad_c <- scale(latinobarometro2020_2010$edad, center = T)
 
@@ -1149,7 +1143,7 @@ tab_model(mod1, mod2, mod3, p.style = "stars",
 
 ## Modelos por cluster
 
-```{r justificación evasion cluster, message=FALSE, warning=FALSE, results='asis'}
+```{r justificación evasion cluster, message=FALSE, warning=FALSE, results='asis', eval=FALSE, include=FALSE}
 
 latinobarometro2023$just_dist_ingresos_f <- relevel(latinobarometro2023$just_dist_ingresos_f, ref = "Muy injusta")
 latinobarometro2023$clase_subjetiva4 <- relevel(latinobarometro2023$clase_subjetiva4, ref = "Baja")
@@ -1207,7 +1201,7 @@ mod %>%
 ```
 
 
-```{r evasion cluster, essage=FALSE, warning=FALSE, results='asis'}
+```{r evasion cluster, essage=FALSE, warning=FALSE, results='asis', eval=FALSE, include=FALSE}
 
 latinobarometro2020_2010$just_dist_ingresos_f <- relevel(latinobarometro2020_2010$just_dist_ingresos_f, ref = "Muy justa")
 latinobarometro2020_2010$clase_subjetiva_f <- relevel(latinobarometro2020_2010$clase_subjetiva_f, ref = "Baja")
