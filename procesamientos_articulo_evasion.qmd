@@ -61,7 +61,7 @@ latinobarometro$pib_ppa_log <- log(latinobarometro$pib_ppa)
 
 ### Clusters países
 
-```{r clusters, message=FALSE, warning=FALSE}
+```{r clusters, message=FALSE, warning=FALSE, eval=FALSE}
 
 #Toda la base
 paises_sel <- datos_paises %>% 
@@ -215,7 +215,7 @@ ggsave("graficos/indice_estratificacion_flag.png", width = 8, height = 6)
 ```
 
 
-```{r message=FALSE, warning=FALSE}
+```{r message=FALSE, warning=FALSE, eval=FALSE}
 #2023
 var_obj_2023 <- latinobarometro %>%
   filter(anio == 2023) %>%
@@ -461,7 +461,7 @@ ggsave("graficos/correspondencia_evasion_justificacion.png", width = 8, height =
 
 ### Evasión impositiva declarada según características de países
 
-```{r arreglos, message=FALSE, warning=FALSE}
+```{r arreglos, message=FALSE, warning=FALSE, eval=FALSE}
 latinobarometro %>% 
   filter(anio == 2020 | anio == 2010, !iso3 %in% c("VEN", "NIC")) %>%
   group_by(anio_pais) %>%
@@ -650,7 +650,7 @@ ggsave("graficos/evasion_clases_medias.png", width = 8, height = 5)
 ```
 ### Justificación de la evasión impositiva según características de países
 
-```{r evasion subjetiva, message=FALSE, warning=FALSE}
+```{r evasion subjetiva, message=FALSE, warning=FALSE, eval=FALSE}
 latinobarometro %>% 
   filter(anio == 2023 | anio == 2013, !iso3 %in% c("VEN", "NIC")) %>%
   group_by(anio_pais) %>%
@@ -885,7 +885,7 @@ as_gt()
 
 ### Variable objetivo: justificación de la evasión impositiva (2023)
 
-```{r message=FALSE, warning=FALSE, results='asis', eval=TRUE}
+```{r message=FALSE, warning=FALSE, results='asis', eval=FALSE}
 latinobarometro2023$just_dist_ingresos_dic <- relevel(latinobarometro2023$just_dist_ingresos_dic, ref = "Justa")
 latinobarometro2023$clase_subjetiva4 <- relevel(latinobarometro2023$clase_subjetiva4, ref = "Baja")
 latinobarometro2023$pro_mercado_dic <- relevel(latinobarometro2023$pro_mercado_dic, ref = "De acuerdo")
@@ -951,7 +951,7 @@ mod1 %>%
 
 ### Variable objetivo: evasión impositiva (2020)
 
-```{r message=FALSE, warning=FALSE, results='asis', eval=TRUE}
+```{r regresion, message=FALSE, warning=FALSE, results='asis', eval=TRUE}
 
 latinobarometro2020_2010$just_dist_ingresos_dic <- relevel(latinobarometro2020_2010$just_dist_ingresos_dic, ref = "Justa")
 latinobarometro2020_2010$clase_subjetiva4 <- relevel(latinobarometro2020_2010$clase_subjetiva4, ref = "Baja")
@@ -960,28 +960,30 @@ latinobarometro2020_2010$pais_f <- relevel(latinobarometro2020_2010$pais_f, ref 
 latinobarometro2020_2010$sexo2 <- relevel(latinobarometro2020_2010$sexo2, ref = "Mujer")
 latinobarometro2020_2010$ayuda_pobres_dinero_f <- relevel(latinobarometro2020_2010$ayuda_pobres_dinero_f, ref = "No")
 latinobarometro2020_2010$ayuda_gobierno_tramo_f <- relevel(latinobarometro2020_2010$ayuda_gobierno_tramo_f, ref = "A ninguno")
-latinobarometro2020_2010$pago_impuestos_tramo_f <- relevel(latinobarometro2020_2010$pago_impuestos_tramo_f, ref = "Ninguno")
-latinobarometro2020_2010$corrupcion_f <- relevel(latinobarometro2020_2010$corrupcion_f, ref = "Nada")
+# latinobarometro2020_2010$pago_impuestos_tramo_f <- relevel(latinobarometro2020_2010$pago_impuestos_tramo_f, ref = "Ninguno")
+# latinobarometro2020_2010$corrupcion_f <- relevel(latinobarometro2020_2010$corrupcion_f, ref = "Nada")
+relevel(latinobarometro2020_2010$pago_impuestos_dic, ref = "Todos pagan por igual")
 
 latinobarometro2020_2010$arreglo_impuestos <- as.factor(latinobarometro2020_2010$arreglo_impuestos)
+
+latinobarometro2020_2010$edad2 <- latinobarometro2020_2010$edad^2
 
 solo2020 <- latinobarometro2020_2010 %>% 
   filter(anio == 2020)
 
-mod2_a <- glm(arreglo_impuestos ~ edad + sexo2 + dim1_std,
+mod2_a <- glm(arreglo_impuestos ~ edad + edad2 + sexo2 + dim1_std,
                  data = solo2020, weights = wt, family = binomial(link = "logit"))
 
-mod2_b <- glm(arreglo_impuestos ~ edad + sexo2 + dim1_std + clase_subjetiva4 + just_dist_ingresos_dic + pro_mercado_dic + ayuda_pobres_dinero_f + ayuda_gobierno_tramo_f + pago_impuestos_tramo_f + aceptabilidad_desigualdad + corrupcion_f, data = solo2020, weights = wt, family = binomial(link = "logit"))
+mod2_b <- glm(arreglo_impuestos ~ edad + edad2 + sexo2 + dim1_std + clase_subjetiva4 + just_dist_ingresos_dic + pro_mercado_dic + ayuda_pobres_dinero_f + ayuda_gobierno_tramo_f + pago_impuestos_dic + aceptabilidad_desigualdad + corrupcion_f + ideologia, data = solo2020, weights = wt, family = binomial(link = "logit"))
 
-mod2_c <- glm(arreglo_impuestos ~ edad + sexo2 + dim1_std + clase_subjetiva4 + just_dist_ingresos_dic + pro_mercado_dic + ayuda_pobres_dinero_f + ayuda_gobierno_tramo_f + pago_impuestos_tramo_f + aceptabilidad_desigualdad + corrupcion_f + pais_f, data = solo2020, weights = wt, family = binomial(link = "logit"), , na.action = na.exclude)
+mod2_c <- glm(arreglo_impuestos ~ edad + edad2 + sexo2 + dim1_std + clase_subjetiva4 + just_dist_ingresos_dic + pro_mercado_dic + ayuda_pobres_dinero_f + ayuda_gobierno_tramo_f + pago_impuestos_dic + aceptabilidad_desigualdad + corrupcion_f + ideologia + pais_f, data = solo2020, weights = wt, family = binomial(link = "logit"), , na.action = na.exclude)
 
-
-# Realizar matriz de confusión
 
 mod1 <- export_summs(mod2_a, mod2_b, mod2_c, model.names = c("Objetivas", "Objetivas + mediadoras", "Efecto fijo países"), 
                      exp = T, stars = c(`***` = 0.01, `**` = 0.05, `*` = 0.1),
                      error_pos = "same",
                      coefs = c("Edad" = "edad",
+                               "Edad2" = "edad2",
                                "Varón" = "sexo2Varón",
                                "Estratificación objetiva" = "dim1_std",
                                "Clase sub. media alta" = "clase_subjetiva4Media alta",
@@ -994,64 +996,94 @@ mod1 <- export_summs(mod2_a, mod2_b, mod2_c, model.names = c("Objetivas", "Objet
                                "Ayuda gob. tramo medio" = "ayuda_gobierno_tramo_fMedio",
                                "Ayuda gob. tramo alto" = "ayuda_gobierno_tramo_fAlto",
                                "Ayuda gob. a todos" = "ayuda_gobierno_tramo_fA todos por igual",
-                               "Impuestos desde tramo bajo (ref: A ninguno)" = "pago_impuestos_tramo_fBajo",
-                               "Impuestos desde tramo medio" = "pago_impuestos_tramo_fMedio",
-                               "Impuestos desde tramo alto" = "pago_impuestos_tramo_fAlto",
-                               "Impuestos a todos" = "pago_impuestos_tramo_fTodos por igual",
+                               "Todos deben pagar impuestos por igual (ref: solo ricos)" = "pago_impuestos_dicTodos pagan por igual",
                                "Aceptabilidad de la desigualdad" = "aceptabilidad_desigualdad",
-                               "Corrupción Poco" = "corrupcion_fPoco",
-                               "Corrupción Algo" = "corrupcion_fAlgo",
-                               "Corrupción Mucho" = "corrupcion_fMucho"
-                               ))
+                               "Ningún progreso contra corrupción" = "corrupcion_fNada",
+                               "Ideologia (izq-der)" = "ideologia"))
 
 mod1 %>% 
   set_caption("Modelos de regresión logística. Odds ratios. Evasión impositiva. 2020")
 
 
-# reg_coef <- plot_summs(mod2_a, mod2_b, mod2_c, ci_level = 0.91, 
-#                        model.names = c("Objetivas", "Objetivas + Subjetivas", "Objetivas + Subjetivas + Países"), 
-#                        point.size = 2,
-#                        line.size = c(0.5, 1),
-#                        exp = T,
-#                        coefs = c("Edad" = "edad",
-#                                "Varón" = "sexo2Varón",
-#                                "Estratificación objetiva" = "dim1_std",
-#                                "Clase sub. alta (ref: Baja)" = "clase_subjetiva_fAlta",
-#                                "Clase sub. media alta" = "clase_subjetiva_fMedia alta",
-#                                "Clase sub. media" = "clase_subjetiva_fMedia",
-#                                "Clase sub. media baja" = "clase_subjetiva_fMedia baja",
-#                                "Distribución justa (ref: Muy justa)" = "just_dist_ingresos_fJusta",
-#                                "Distribución injusta" = "just_dist_ingresos_fInjusta",
-#                                "Distribución muy injusta" = "just_dist_ingresos_fMuy injusta",
-#                                "Pro mercado de acuerdo (ref: Muy de acuerdo)" = "pro_mercado_fDe acuerdo",
-#                                "Pro mercado en desacuerdo" = "pro_mercado_fEn desacuerdo",
-#                                "Pro mercado muy en desacuerdo" = "pro_mercado_fMuy en desacuerdo",
-#                                "Ayudar con dinero a pobres" = "ayuda_pobres_dinero_fSi",
-#                                "Ayuda gob. tramo bajo (ref: A ninguno)" = "ayuda_gobierno_tramo_fBajo",
-#                                "Ayuda gob. tramo medio" = "ayuda_gobierno_tramo_fMedio",
-#                                "Ayuda gob. tramo alto" = "ayuda_gobierno_tramo_fAlto",
-#                                "Ayuda gob. a todos" = "ayuda_gobierno_tramo_fA todos por igual",
-#                                "Impuestos desde tramo bajo (ref: A ninguno)" = "pago_impuestos_tramo_fBajo",
-#                                "Impuestos desde tramo medio" = "pago_impuestos_tramo_fMedio",
-#                                "Impuestos desde tramo alto" = "pago_impuestos_tramo_fAlto",
-#                                "Impuestos a todos" = "pago_impuestos_tramo_fTodos por igual",
-#                                "Aceptabilidad de la desigualdad" = "aceptabilidad_desigualdad"))
-# 
-# reg_coef +
-#   labs(title ="Modelos de regresión logística. \nArreglo para pagar menos impuestos. 2020",
-#        subtitle ="Coeficientes exponenciados",
-#        caption = "Fuente: elaboración propia en base a Latinobarómetro", 
-#        x = "Razones de momios") +
-#   theme(axis.title.y = element_blank(),
-#         axis.title.x = element_blank(),
-#         axis.text.x = element_text(size = 10),
-#         axis.text.y = element_text(size = 12),
-#         legend.position= "bottom",
-#         legend.title = element_blank()) +
-#   scale_x_continuous(limits = c(0.5, 2), breaks = seq(0.5, 2, .1))
-# 
-# 
-# ggsave("graficos/regresiones_arreglo_impuestos.png", width = 10, height = 6)
+reg_coef <- plot_summs(mod2_a, mod2_b, mod2_c, ci_level = 0.91,
+                       model.names = c("Objetivas", "Objetivas + Subjetivas", "Objetivas + Subjetivas + Países"),
+                       point.size = 2,
+                       line.size = c(0.5, 1),
+                       exp = T,
+                       coefs = c("Edad" = "edad",
+                               "Edad2" = "edad2",
+                               "Varón" = "sexo2Varón",
+                               "Estratificación objetiva" = "dim1_std",
+                               "Clase sub. media alta" = "clase_subjetiva4Media alta",
+                               "Clase sub. media" = "clase_subjetiva4Media",
+                               "Clase sub. media baja" = "clase_subjetiva4Media baja",
+                               "Distribución muy injusta" = "just_dist_ingresos_dicMuy injusta",
+                               "En desacuerdo mercado" = "pro_mercado_dicEn desacuerdo",
+                               "Ayudar con dinero a pobres" = "ayuda_pobres_dinero_fSi",
+                               "Ayuda gob. tramo bajo (ref: A ninguno)" = "ayuda_gobierno_tramo_fBajo",
+                               "Ayuda gob. tramo medio" = "ayuda_gobierno_tramo_fMedio",
+                               "Ayuda gob. tramo alto" = "ayuda_gobierno_tramo_fAlto",
+                               "Ayuda gob. a todos" = "ayuda_gobierno_tramo_fA todos por igual",
+                               "Todos deben pagar impuestos por igual (ref: solo ricos)" = "pago_impuestos_dicTodos pagan por igual",
+                               "Aceptabilidad de la desigualdad" = "aceptabilidad_desigualdad",
+                               "Ningún progreso contra corrupción" = "corrupcion_fNada",
+                               "Ideologia (izq-der)" = "ideologia"))
+
+reg_coef +
+  labs(title ="Modelos de regresión logística. \nArreglo para pagar menos impuestos. 2020",
+       subtitle ="Coeficientes exponenciados",
+       caption = "Fuente: elaboración propia en base a Latinobarómetro",
+       x = "Razones de momios") +
+  theme(axis.title.y = element_blank(),
+        axis.title.x = element_blank(),
+        axis.text.x = element_text(size = 10),
+        axis.text.y = element_text(size = 12),
+        legend.position= "bottom",
+        legend.title = element_blank()) +
+  scale_x_continuous(limits = c(0.5, 2), breaks = seq(0.5, 2, .1))
+
+
+```
+
+```{r Probabilidades, message=FALSE, warning=FALSE, results='asis', eval=TRUE}
+library(marginaleffects)
+library(ggeffects)
+
+ame_pais <- avg_slopes(mod2_c, variables = "dim1_std", by = "pais_f")
+
+ggplot(ame_pais, aes(x = reorder(pais_f, estimate), y = estimate)) +
+  geom_point(size = 3) +
+  geom_errorbar(aes(ymin = conf.low, ymax = conf.high), width = 0.2) +
+  coord_flip() +
+  labs(
+    x = "País",
+    y = "AME de 'dim1_std' sobre acuerdo con arreglo de impuestos",
+    title = "Efecto marginal promedio por país",
+    subtitle = "Modelo sin interacción: pendiente común, efectos evaluados por país"
+  ) +
+  theme_minimal()
+
+
+mod2_interac <- glm(arreglo_impuestos ~ edad + edad2 + sexo2 + clase_subjetiva4 + just_dist_ingresos_dic + pro_mercado_dic + ayuda_pobres_dinero_f + ayuda_gobierno_tramo_f + pago_impuestos_dic + aceptabilidad_desigualdad + corrupcion_f + ideologia + pais_f * dim1_std, data = solo2020, weights = wt, family = binomial(link = "logit"), , na.action = na.exclude)
+
+ame_pais <- avg_slopes(mod2_interac, variables = "dim1_std", by = "pais_f")
+
+ame_pais$signif <- ame_pais$p.value < 0.05
+
+ggplot(ame_pais, aes(x = reorder(pais_f, estimate), y = estimate, color = signif)) +
+  geom_point(size = 2) +
+  geom_errorbar(aes(ymin = conf.low, ymax = conf.high), width = 0.2) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "gray40") +
+  coord_flip() +
+  labs(
+    x = "País",
+    y = "Efecto marginal (AME) de la estratificación",
+    title = "Efecto de la estratificación sobre la evasión por país",
+    subtitle = "Colores indican significancia estadística (p < 0.05)"
+  ) +
+  scale_color_manual(values = c("TRUE" = "darkblue", "FALSE" = "gray60")) +
+  theme_minimal(base_size = 13) +
+  theme(legend.position = "none")
 
 ```
 

@@ -672,6 +672,8 @@ latinobarometro <- latinobarometro %>%
                                           TRUE ~ NA_real_),
          pago_impuestos_tramo = case_when(anio == 2020 ~ s8npn_b,
                                           TRUE ~ NA_real_),
+         pago_impuestos_dic = case_when(anio == 2020 ~ s9npn,
+                                          TRUE ~ NA_real_),
          aceptabilidad_desigualdad = case_when(anio == 2020 ~ p72npn,
                                        TRUE ~ NA_real_),
          corrupcion = case_when(anio == 2004 ~ p54st,
@@ -846,12 +848,12 @@ latinobarometro <- latinobarometro %>%
                                                   pago_impuestos_tramo == 12 ~ "Ninguno",
                                                   TRUE ~ NA_character_),
                                          levels = c("Ninguno", "Todos por igual", "Bajo", "Medio", "Alto")),
-         corrupcion_f = factor(corrupcion,
-                               levels = c(1,2,3,4),
-                               labels = c("Mucho",
-                                              "Algo",
-                                              "Poco",
-                                              "Nada")))
+         pago_impuestos_dic = factor(case_when(pago_impuestos_dic == 1 ~ "Todos pagan por igual",
+                                               pago_impuestos_dic == 2 ~ "Los que ganan más pagan más",
+                                               TRUE ~ NA_character_)),
+         corrupcion_f = factor(case_when(corrupcion %in% c(1, 2, 3) ~ "Mucho-Algo-Poco",
+                                         corrupcion == 4 ~ "Nada",
+                                         TRUE ~ NA_character_)))
          
                                       
          
@@ -940,6 +942,7 @@ orden_variables <- c("entrevista",
                      "ayuda_pobres_dinero_f",
                      "ayuda_gobierno_tramo_f",
                      "pago_impuestos_tramo_f",
+                     "pago_impuestos_dic",
                      "aceptabilidad_desigualdad",
                      "corrupcion_f")
 
