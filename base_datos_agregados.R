@@ -42,24 +42,27 @@ ingresos_tributarios <- ingresos_tributarios %>%
          impuestos_tot_cs = 'Total ingresos tributarios (incluyendo contribuciones sociales)')
 
 
-# #Ingresos tributarios banco mundial
-# options(scipen = 999)
-# 
-# ingresos_tributarios_wb <- read.csv("bases/rev_tax_data.csv") 
-# 
-# ingresos_tributarios_wb <- ingresos_tributarios_wb %>% 
-#   filter(iso3_code %in% c("ARG", "BOL", "BRA", "CHL", "COL", "CRI", "DOM", "ECU",
-#                      "SLV", "GTM", "HND", "MEX", "NIC", "PAN", "PRY", "PER",
-#                      "URY", "VEN"),
-#          Year2 >= 2010)
-# 
-# ingresos_tributarios_wb_tot <- ingresos_tributarios_wb %>% 
-#   filter(indicator.name == "Tax Revenue") %>% 
-#   select(iso3_code, Year2, value) %>% 
-#   rename(pais = iso3_code, 
-#          anio = Year2, 
-#          impuestos = value)
+#Ingresos tributarios banco mundial
+options(scipen = 999)
 
+ingresos_tributarios_wb <- read.csv("bases/rev_tax_data.csv")
+
+ingresos_tributarios_wb <- ingresos_tributarios_wb %>%
+  filter(iso3_code %in% c("ARG", "BOL", "BRA", "CHL", "COL", "CRI", "DOM", "ECU",
+                     "SLV", "GTM", "HND", "MEX", "NIC", "PAN", "PRY", "PER",
+                     "URY", "VEN"),
+         Year2 >= 1998)
+
+ingresos_tributarios_wb_tot <- ingresos_tributarios_wb %>%
+  filter(indicator.name == "Tax Revenue") %>%
+  select(iso3_code, Year2, value, Capacity, Gap) %>%
+  rename(pais = iso3_code,
+         anio = Year2,
+         impuestos = value,
+         capacidad = Capacity,
+         gap = Gap)
+
+# save(ingresos_tributarios_wb_tot, file = "bases/ingresos_tributarios_wb_tot.RData")
 
 #Gini (CEPAL)
 
@@ -243,6 +246,7 @@ sectores_medios <- sectores_medios %>%
 
 base_agregadas <- pib %>% 
   left_join(ingresos_tributarios, by = c("pais", "anio")) %>% 
+  left_join(ingresos_tributarios_wb_tot, by = c("pais", "anio")) %>%
   left_join(gini_hog, by = c("pais", "anio")) %>% 
   left_join(deciles_hog, by = c("pais", "anio")) %>% 
   left_join(empleo_publico, by = c("pais", "anio")) %>% 

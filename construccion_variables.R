@@ -809,7 +809,7 @@ latinobarometro <- latinobarometro %>%
                                                   "Justa",
                                                   "Injusta",
                                                   "Muy injusta")),
-         just_dist_ingresos_dic = factor(case_when(just_dist_ingresos %in% c(1, 2, 3) ~ "Justa",
+         just_dist_ingresos_dic = factor(case_when(just_dist_ingresos %in% c(1, 2, 3) ~ "Muy justa-justa-injusta",
                                            just_dist_ingresos == 4 ~ "Muy injusta",
                                            TRUE ~ NA_character_)),
          situacion_eco_pais_f = factor(situacion_eco_pais,
