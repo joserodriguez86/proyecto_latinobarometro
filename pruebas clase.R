@@ -49,7 +49,7 @@ icc(mod1)
 
 mod2 <- glmer(clase_media ~ edad_cw + sexo2 + (1 | anio_pais), data = latinobarometro_sel, family = binomial(link = "logit"))
 
-mod3 <- glmer(clase_media ~ edad_cw + sexo2 + pib_ppa_cgm + ocupaciones_medias_cgm + informalidad_cgm + empleo_cgm + gini_cgm + (1 | anio_pais), data = latinobarometro_sel, family = binomial(link = "logit"))
+mod3 <- glmer(clase_media ~ edad_cw + sexo2 + pib_ppa_cgm + ocupaciones_medias_cgm + informalidad_cgm + empleo_cgm + palma_cgm + (1 | anio_pais), data = latinobarometro_sel, family = binomial(link = "logit"))
 
 compare_performance(mod1, mod2, mod3)
 

@@ -13,11 +13,13 @@ latinobarometro <- latinobarometro %>%
                           numinves == 23 ~ 2023,
                           NUMINVES == 2018 ~ 2018,
                           TRUE ~ numinves),
-         pais = ifelse(is.na(idenpa), IDENPA, idenpa),
-         pais_f = factor(latinobarometro$idenpa, labels = 
-                           c("Arg", "Bol", "Bra", "Chi", "Col", "Cri", "Dom", "Ecu", 
-                             "Slv", "Gua", "Hon", "Mex", "Nic", "Pan", "Par", "Per",
-                             "Esp", "Uru", "Ven")),
+         pais = ifelse(is.na(idenpa), IDENPA, idenpa))
+
+latinobarometro <- latinobarometro %>% 
+  mutate(pais_f = factor(latinobarometro$pais, 
+                         labels = c("Arg", "Bol", "Bra", "Chi", "Col", "Cri", "Dom", "Ecu", 
+                                    "Slv", "Gua", "Hon", "Mex", "Nic", "Pan", "Par", "Per",
+                                    "Esp", "Uru", "Ven")),
          entrevista = ifelse(anio == 2018, NUMENTRE, numentre),
          wt = case_when(anio == 1998 ~ pondera,
                         anio == 2018 ~ WT,
@@ -743,7 +745,7 @@ seleccion_variables <- c("democracia",
                          "corrupcion")
 
 for (i in seleccion_variables) {
-  latinobarometro[[i]] <- ifelse(latinobarometro[[i]] < 1, NA, latinobarometro[[i]])
+  latinobarometro[[i]] <- ifelse(latinobarometro[[i]] < 0, NA, latinobarometro[[i]])
 }
                          
 
@@ -802,7 +804,8 @@ latinobarometro <- latinobarometro %>%
                                                 "Nada satisfecho")),
          ideologia = ifelse(ideologia == 97, NA, ideologia),
          pais_poderosos_f = factor(pais_poderosos,
-                                   labels = c("Grupos poderosos en su propio beneficio",
+                                   labels = c("Ns/Nc", 
+                                              "Grupos poderosos en su propio beneficio",
                                               "Para el bien de todo el pueblo")),
          just_dist_ingresos_f = factor(just_dist_ingresos,
                                        labels = c("Muy justa",
