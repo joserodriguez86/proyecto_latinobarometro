@@ -16,7 +16,7 @@ execute:
 ```{r }
 rm(list = ls())
 
-pacman::p_load(tidyverse, Hmisc, gtsummary, GDAtools, jtools, huxtable, survey, ggoxford, ggtext, lme4, performance, sjPlot, factoextra)
+pacman::p_load(tidyverse, Hmisc, gtsummary, GDAtools, jtools, huxtable, survey, ggoxford, ggtext, factoextra, paletteer)
 
 load("bases/latinobarometro_select.RData")
 load("bases/ingresos_tributarios_wb_tot.RData")  
@@ -24,7 +24,7 @@ load("bases/ingresos_tributarios_wb_tot.RData")
 ingresos_tributarios_wb_tot <- ingresos_tributarios_wb_tot %>% 
   rename(iso3 = pais)
 
-theme_set(theme_light())
+theme_set(theme_bw())
 
 ```
 
@@ -105,52 +105,55 @@ latinobarometro2020 <- latinobarometro %>%
 latinobarometro2020 %>% 
   group_by(iso3) %>%
   summarise(
-  promedio = weighted.mean(dim1_01, wt = wt, na.rm = T)) %>%
+  promedio = weighted.mean(dim1_std, wt = wt, na.rm = T)) %>%
   ggplot(aes(x = fct_reorder(iso3, promedio, .desc = T), y = promedio)) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "red") +
   geom_segment(aes(x=iso3, xend=iso3, y=0, yend=promedio), color="orange") +
-  geom_point( color="orange", size=4) +
+  geom_point( color="orange", size=3) +
   geom_axis_flags(breaks = latinobarometro$iso3,
                   labels = latinobarometro$pais_f,
                   country_icons = latinobarometro$iso3,
                   width = 20,
                   lineheight = 2) +
-  labs(title = "Índice de estratificación",
-       subtitle = "Países de América Latina. 2020",
+  labs(title = "Índice de estratificación objetiva",
+       subtitle = "Países seleccionados de América Latina. 2020",
        caption = "Fuente: elaboración propia en base a Latinobarómetro") +
   theme(axis.title.x = element_blank(),
         axis.title.y = element_blank(),
         axis.text.y = element_text(size = 11)) +
-  scale_y_continuous(limits = c(0, .8), breaks = seq(0, .8, .1))
+  scale_y_continuous(limits = c(-1, 1), breaks = seq(-1, 1, .5))
+
+ggsave("graficos/evasion/estratificacion_objetiva.png", width = 8, height = 5, dpi = 300)
 
 ```
 ## Datos descriptivos
 
 ```{r descriptivos impuestos}
 
-prom_gap <- latinobarometro %>% 
-  filter(!iso3 %in% c("BOL", "COL", "VEN")) %>%
-  summarise(gap = mean(gap, na.rm = T))
-
-latinobarometro %>% 
-  filter(!iso3 %in% c("BOL", "COL", "VEN"), anio <= 2020) %>% 
-  group_by(anio, iso3) %>% 
-  summarise(gap_pais = mean(gap, na.rm = T)) %>% 
-  ggplot(aes(x = anio, y = gap_pais, group = 1)) +
-  geom_line() +
-  geom_hline(yintercept = prom_gap$gap, linetype = "dashed", color = "red") +
-  labs(
-    title = "Evolución de la diferencia entre los ingresos tributarios potenciales y efectivos",
-    subtitle = "Países seleccionados. 1998-2020. En porcentaje del PBI.",
-    caption = "Fuente: elaboración propia en base a Tax Revenue Dashboard (Banco Mundial)"
-  ) +
-  theme(
-    axis.title.x = element_blank(),
-    axis.title.y = element_blank(),
-    axis.text.x = element_text(size = 8),
-    axis.text.y = element_text(size = 9),
-    strip.text = element_text(size = 8, margin = margin(t = 2, b = 2))
-  ) +
-  facet_wrap(~iso3, ncol = 4)
+# prom_gap <- latinobarometro %>% 
+#   filter(!iso3 %in% c("BOL", "COL", "VEN")) %>%
+#   summarise(gap = mean(gap, na.rm = T))
+# 
+# latinobarometro %>% 
+#   filter(!iso3 %in% c("BOL", "COL", "VEN"), anio <= 2020) %>% 
+#   group_by(anio, iso3) %>% 
+#   summarise(gap_pais = mean(gap, na.rm = T)) %>% 
+#   ggplot(aes(x = anio, y = gap_pais, group = 1)) +
+#   geom_line() +
+#   geom_hline(yintercept = prom_gap$gap, linetype = "dashed", color = "red") +
+#   labs(
+#     title = "Evolución de la diferencia entre los ingresos tributarios potenciales y efectivos",
+#     subtitle = "Países seleccionados. 1998-2020. En porcentaje del PBI.",
+#     caption = "Fuente: elaboración propia en base a Tax Revenue Dashboard (Banco Mundial)"
+#   ) +
+#   theme(
+#     axis.title.x = element_blank(),
+#     axis.title.y = element_blank(),
+#     axis.text.x = element_text(size = 8),
+#     axis.text.y = element_text(size = 9),
+#     strip.text = element_text(size = 8, margin = margin(t = 2, b = 2))
+#   ) +
+#   facet_wrap(~iso3, ncol = 4)
 
 
 prom_evasion <- latinobarometro %>% 
@@ -161,28 +164,36 @@ latinobarometro %>%
   summarise(evasion = weighted.mean(arreglo_impuestos, wt = wt, na.rm = T)) %>%
   na.omit() %>% 
   ggplot(aes(x = anio, y = evasion, group = 1)) +
-  geom_line(na.rm = T) +
-  geom_hline(yintercept = prom_evasion$evasion, linetype = "dashed", color = "red") +
+  # geom_line(na.rm = T) +
+  geom_hline(yintercept = prom_evasion$evasion, linetype = "dashed", color = "red", size = .4) +
+  geom_point(size = 1) +
+  geom_text(
+    data = function(d) d %>% filter(anio == 2020),
+    aes(label = scales::percent(evasion, accuracy = 1)),
+    size = 2.5, vjust = -0.8,hjust = 1
+  ) +
   labs(
     title = "Evolución del porcentaje de personas que pagaron menos impuestos del que debían",
-    subtitle = "Países seleccionados. 1998-2020.",
+    subtitle = "Países seleccionados. 1998-2020 (Promedio general en línea punteada roja).",
     caption = "Fuente: elaboración propia en base a Latinobarómetro"
   ) + 
   theme(
     axis.title.x = element_blank(),
     axis.title.y = element_blank(),
-    axis.text.x = element_text(angle = 45, hjust = 1, size = 7),
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 6.5),
     axis.text.y = element_text(size = 8),
     strip.text = element_text(size = 8, margin = margin(t = 2, b = 2))
   ) +
   scale_y_continuous(labels = scales::percent_format(accuracy = 1, suffix = ""), breaks = seq(0, .5, 0.15), limits = c(0, .5)) +
-  scale_x_continuous(breaks = c(1998, 2002, 2007, 2009, 2010, 2020)) +
+  scale_x_continuous(breaks = seq(1998, 2020, 2), limits = c(1998, 2020)) +
   facet_wrap(~iso3, ncol = 4)
 
 
+ggsave("graficos/evasion/porcentaje_evasion_impuestos.png", width = 8, height = 5, dpi = 300)
+
 ```
 
-```{r evasión 2020 países}
+```{r evasión 2020 países, eval=FALSE}
 latinobarometro %>% 
   filter(anio == 2020) %>%
   group_by(iso3) %>%
@@ -212,18 +223,34 @@ latinobarometro %>%
 ```
 
 ```{r estratificación y evasión}
+modelo <- latinobarometro2020 %>% 
+  filter(iso3 != "CHL") %>% 
+  group_by(iso3) %>% 
+  summarise(
+    promedio = weighted.mean(dim1_std, wt = wt, na.rm = TRUE),
+    evasion = weighted.mean(arreglo_impuestos, wt = wt, na.rm = TRUE)
+  ) |> 
+  lm(evasion ~ promedio, data = _)
+
+r2 <- summary(modelo)$r.squared
+
+
 latinobarometro2020 %>%
   group_by(iso3) %>%
   filter(iso3 != "CHL") %>% 
   summarise(
-    promedio = weighted.mean(dim1_01, wt = wt, na.rm = T),
+    promedio = weighted.mean(dim1_std, wt = wt, na.rm = T),
     evasion = weighted.mean(arreglo_impuestos, wt = wt, na.rm = T)) %>% 
-  ggplot(aes(x = promedio, y = evasion, label = iso3)) +
+  ggplot(aes(x = promedio, y = evasion)) +
   geom_point(size = 2, alpha = .5) +
   geom_smooth(method = "lm", se = TRUE, size = .5, color = "red") +
   ggrepel::geom_text_repel(aes(label = iso3), size = 2.5, show.legend = FALSE) +
-  labs(title = "Evasión impositiva y estratificación objetiva",
-       subtitle = "Países de América Latina. 2020",
+  annotate("text",
+           x = 0.32, y = 0.39,  # Ajustá posición
+           label = paste0("R² = ", round(r2, 3)),
+           size = 3.5, hjust = 0) +
+  labs(title = "Arreglo para pagar menos impuestos y estratificación objetiva",
+       subtitle = "Países de América Latina. 2020. Error estándar en gris.",
        caption = "Fuente: elaboración propia en base a Latinobarómetro.  
        Chile fue descartado en este gráfico ya que puede considerarse un caso *outlier*.",
        y = "Arreglo para pagar menos impuestos",
@@ -234,7 +261,9 @@ latinobarometro2020 %>%
         axis.text.y = element_text(size = 9),
         plot.caption = ggtext::element_markdown(size = 9)) +
   scale_y_continuous(labels = scales::percent_format(accuracy = 1), breaks = seq(.15, .4, 0.05), limits = c(.15, .4)) +
-  scale_x_continuous(limits = c(.3, .75), breaks = seq(.3, .75, .05))
+  scale_x_continuous(labels = scales::number_format(accuracy = 0.1), breaks = seq(-1, 1, 0.2), limits = c(-1, 1))
+
+ggsave("graficos/evasion/estratificacion_evasion.png", width = 8, height = 5, dpi = 300)
 
 ```
 
@@ -248,9 +277,10 @@ latinobarometro2020 %>%
   geom_bar(stat = "identity", fill = "steelblue", alpha = .8) +
   geom_hline(yintercept = prom_evasion$evasion, linetype = "dashed", color = "red") +
   labs(title = "Porcentaje de personas que pagaron menos impuestos de lo debían según clase social subjetiva",
-       subtitle = "Países de América Latina. 2020",
+       subtitle = "Países de América Latina. 2020 (Porcentaje general en línea punteada roja).",
        caption = "Fuente: elaboración propia en base a Latinobarómetro") +
   theme(
+    title = element_text(size = 10),
     axis.title.x = element_blank(),
     axis.title.y = element_blank(),
     axis.text.x = element_text(size = 8),
@@ -262,7 +292,7 @@ latinobarometro2020 %>%
   facet_wrap(~iso3, ncol = 4)
   
   
-
+ggsave("graficos/evasion/porcentaje_evasion_impuestos_clase_subjetiva.png", width = 8, height = 5, dpi = 300)
 
 ```
 
@@ -274,10 +304,10 @@ theme_gtsummary_compact()
 
 latinobarometro2020 %>%
   svydesign(data = ., ids = ~ 1, weights = ~wt) %>%
-  tbl_svysummary(include = c(edad, sexo2, dim1_01, clase_subjetiva4, just_dist_ingresos_dic, pro_mercado_dic, ayuda_pobres_dinero_f, ayuda_gobierno_tramo_f, pago_impuestos_dic, aceptabilidad_desigualdad, corrupcion_f, ideologia, arreglo_impuestos),
+  tbl_svysummary(include = c(edad, sexo2, dim1_std, clase_subjetiva4, just_dist_ingresos_dic, pro_mercado_dic, ayuda_pobres_dinero_f, ayuda_gobierno_tramo_f, pago_impuestos_dic, aceptabilidad_desigualdad, corrupcion_f, ideologia, arreglo_impuestos),
                  label = c(edad ~ "Edad", 
                            sexo2 ~ "Sexo", 
-                           dim1_01 ~ "Índice de estratificación", 
+                           dim1_std ~ "Índice de estratificación", 
                            clase_subjetiva4 ~ "Clase subjetiva", 
                            just_dist_ingresos_dic ~ "Percepción distribución de ingresos", 
                            pro_mercado_dic ~ "Valoración economía de mercado", 
@@ -286,21 +316,21 @@ latinobarometro2020 %>%
                            pago_impuestos_dic ~ "Opinión pago de impuestos", 
                            aceptabilidad_desigualdad ~ "Aceptación de la desigualdad (1 inaceptable - 10 aceptable)",
                            corrupcion_f ~ "Progreso contra la corrupción",
-                           ideologia ~ "Ideología (1 izqda - 10 derecha)",
+                           ideologia ~ "Ideología (0 izqda - 10 derecha)",
                            arreglo_impuestos ~ "Arreglo para pagar menos impuestos"),
                  statistic = list(all_continuous() ~ "{mean} ({sd})",
                                   all_categorical() ~ "{n} ({p}%)"),
                  digits = list(all_categorical() ~ c(0, 1)),
                  missing = "no") %>% 
   as_flex_table() %>% 
-  flextable::save_as_docx(path = "tablas/descriptivos_2020.docx")
+  flextable::save_as_docx(path = "graficos/evasion/descriptivos_2020.docx")
 
 latinobarometro2020 %>%
   svydesign(data = ., ids = ~ 1, weights = ~wt) %>%
-  tbl_svysummary(include = c(edad, sexo2, dim1_01, clase_subjetiva4, just_dist_ingresos_dic, pro_mercado_dic, ayuda_pobres_dinero_f, ayuda_gobierno_tramo_f, pago_impuestos_dic, aceptabilidad_desigualdad, corrupcion_f, ideologia, arreglo_impuestos),
+  tbl_svysummary(include = c(edad, sexo2, dim1_std, clase_subjetiva4, just_dist_ingresos_dic, pro_mercado_dic, ayuda_pobres_dinero_f, ayuda_gobierno_tramo_f, pago_impuestos_dic, aceptabilidad_desigualdad, corrupcion_f, ideologia, arreglo_impuestos),
                  label = c(edad ~ "Edad", 
                            sexo2 ~ "Sexo", 
-                           dim1_01 ~ "Índice de estratificación", 
+                           dim1_std ~ "Índice de estratificación", 
                            clase_subjetiva4 ~ "Clase subjetiva", 
                            just_dist_ingresos_dic ~ "Percepción distribución de ingresos", 
                            pro_mercado_dic ~ "Valoración economía de mercado", 
@@ -314,7 +344,7 @@ latinobarometro2020 %>%
                  statistic = list(all_continuous() ~ "{mean} ({sd})",
                                   all_categorical() ~ "{n} ({p}%)"),
                  digits = list(all_categorical() ~ c(0, 1)),
-                 missing = "no") %>% 
+                 missing = "no")  %>%  
 as_gt()
   
 
@@ -345,10 +375,12 @@ mod2_a <- glm(arreglo_impuestos ~ edad + edad2 + sexo2 + dim1_std,
 
 mod2_b <- glm(arreglo_impuestos ~ edad + edad2 + sexo2 + dim1_std + clase_subjetiva4 + just_dist_ingresos_dic + pro_mercado_dic + ayuda_pobres_dinero_f + ayuda_gobierno_tramo_f + pago_impuestos_dic + aceptabilidad_desigualdad + corrupcion_f + ideologia, data = latinobarometro2020, weights = wt, family = binomial(link = "logit"))
 
-mod2_c <- glm(arreglo_impuestos ~ edad + edad2 + sexo2 + dim1_std + clase_subjetiva4 + just_dist_ingresos_dic + pro_mercado_dic + ayuda_pobres_dinero_f + ayuda_gobierno_tramo_f + pago_impuestos_dic + aceptabilidad_desigualdad + corrupcion_f + ideologia + pais_f, data = latinobarometro2020, weights = wt, family = binomial(link = "logit"), , na.action = na.exclude)
+mod2_c <- glm(arreglo_impuestos ~ edad + edad2 + sexo2 + dim1_std + clase_subjetiva4 + just_dist_ingresos_dic + pro_mercado_dic + ayuda_pobres_dinero_f + ayuda_gobierno_tramo_f + pago_impuestos_dic + aceptabilidad_desigualdad + corrupcion_f + ideologia + pais_f, data = latinobarometro2020, weights = wt, family = binomial(link = "logit"), na.action = na.exclude)
+
+mod3 <- glm(arreglo_impuestos ~ edad + edad2 + sexo2 + dim1_std + clase_subjetiva4 + just_dist_ingresos_dic + pro_mercado_dic + ayuda_pobres_dinero_f + ayuda_gobierno_tramo_f + pago_impuestos_dic + aceptabilidad_desigualdad + corrupcion_f + ideologia, data = subset(latinobarometro2020, iso3 == "ARG"), weights = wt, family = binomial(link = "logit"), na.action = na.exclude)
 
 
-mod1 <- export_summs(mod2_a, mod2_b, mod2_c, model.names = c("Objetivas", "Objetivas + mediadoras", "Efecto fijo países"), 
+mod1 <- export_summs(mod2_a, mod2_b, mod2_c, mod3, model.names = c("Objetivas", "Objetivas + mediadoras", "Efecto fijo países", "Sólo Argentina"), 
                      exp = T, stars = c(`***` = 0.01, `**` = 0.05, `*` = 0.1),
                      error_pos = "same",
                      coefs = c("Edad" = "edad",
@@ -370,51 +402,57 @@ mod1 <- export_summs(mod2_a, mod2_b, mod2_c, model.names = c("Objetivas", "Objet
                                "Ningún progreso contra corrupción" = "corrupcion_fNada",
                                "Ideologia (izq-der)" = "ideologia"))
 
-mod1 %>% 
+mod1 %>%  
   set_caption("Modelos de regresión logística. Odds ratios. Evasión impositiva. 2020")
 
+mod1 <- mod1 %>% 
+  as_flextable() %>%  
+  flextable::save_as_docx(path = "graficos/evasion/regresion.docx")
+  
 
-reg_coef <- plot_summs(mod2_a, mod2_b, mod2_c, ci_level = 0.91,
-                       model.names = c("Objetivas", "Objetivas + Subjetivas", "Objetivas + Subjetivas + Países"),
-                       point.size = 2,
-                       line.size = c(0.5, 1),
-                       exp = T,
-                       coefs = c("Edad" = "edad",
-                               "Edad2" = "edad2",
-                               "Varón" = "sexo2Varón",
-                               "Estratificación objetiva" = "dim1_std",
-                               "Clase sub. media alta" = "clase_subjetiva4Media alta",
-                               "Clase sub. media" = "clase_subjetiva4Media",
-                               "Clase sub. media baja" = "clase_subjetiva4Media baja",
-                               "Distribución muy injusta" = "just_dist_ingresos_dicMuy injusta",
-                               "En desacuerdo mercado" = "pro_mercado_dicEn desacuerdo",
-                               "Ayudar con dinero a pobres" = "ayuda_pobres_dinero_fSi",
-                               "Ayuda gob. tramo bajo (ref: A ninguno)" = "ayuda_gobierno_tramo_fBajo",
-                               "Ayuda gob. tramo medio" = "ayuda_gobierno_tramo_fMedio",
-                               "Ayuda gob. tramo alto" = "ayuda_gobierno_tramo_fAlto",
-                               "Ayuda gob. a todos" = "ayuda_gobierno_tramo_fA todos por igual",
-                               "Todos deben pagar impuestos por igual (ref: solo ricos)" = "pago_impuestos_dicTodos pagan por igual",
-                               "Aceptabilidad de la desigualdad" = "aceptabilidad_desigualdad",
-                               "Ningún progreso contra corrupción" = "corrupcion_fNada",
-                               "Ideologia (izq-der)" = "ideologia"))
 
-reg_coef +
-  labs(title ="Modelos de regresión logística. \nArreglo para pagar menos impuestos. 2020",
-       subtitle ="Coeficientes exponenciados",
-       caption = "Fuente: elaboración propia en base a Latinobarómetro",
-       x = "Razones de momios") +
-  theme(axis.title.y = element_blank(),
-        axis.title.x = element_blank(),
-        axis.text.x = element_text(size = 10),
-        axis.text.y = element_text(size = 12),
-        legend.position= "bottom",
-        legend.title = element_blank()) +
-  scale_x_continuous(limits = c(0.5, 2), breaks = seq(0.5, 2, .1))
+
+
+# reg_coef <- plot_summs(mod2_c, mod3, ci_level = 0.91,
+#                        model.names = c("Efectos fijos países", "Sólo Argentina"),
+#                        point.size = 2,
+#                        line.size = c(0.5, 1),
+#                        exp = T,
+#                        coefs = c("Edad" = "edad",
+#                                "Edad2" = "edad2",
+#                                "Varón" = "sexo2Varón",
+#                                "Estratificación objetiva" = "dim1_std",
+#                                "Clase sub. media alta" = "clase_subjetiva4Media alta",
+#                                "Clase sub. media" = "clase_subjetiva4Media",
+#                                "Clase sub. media baja" = "clase_subjetiva4Media baja",
+#                                "Distribución muy injusta" = "just_dist_ingresos_dicMuy injusta",
+#                                "En desacuerdo mercado" = "pro_mercado_dicEn desacuerdo",
+#                                "Ayudar con dinero a pobres" = "ayuda_pobres_dinero_fSi",
+#                                "Ayuda gob. tramo bajo (ref: A ninguno)" = "ayuda_gobierno_tramo_fBajo",
+#                                "Ayuda gob. tramo medio" = "ayuda_gobierno_tramo_fMedio",
+#                                "Ayuda gob. tramo alto" = "ayuda_gobierno_tramo_fAlto",
+#                                "Ayuda gob. a todos" = "ayuda_gobierno_tramo_fA todos por igual",
+#                                "Todos deben pagar impuestos por igual (ref: solo ricos)" = "pago_impuestos_dicTodos pagan por igual",
+#                                "Aceptabilidad de la desigualdad" = "aceptabilidad_desigualdad",
+#                                "Ningún progreso contra corrupción" = "corrupcion_fNada",
+#                                "Ideologia (izq-der)" = "ideologia"))
+# 
+# reg_coef +
+#   labs(title ="Modelos de regresión logística. \nArreglo para pagar menos impuestos. 2020",
+#        subtitle ="Coeficientes exponenciados",
+#        caption = "Fuente: elaboración propia en base a Latinobarómetro",
+#        x = "Razones de momios") +
+#   theme(axis.title.y = element_blank(),
+#         axis.title.x = element_blank(),
+#         axis.text.x = element_text(size = 8),
+#         axis.text.y = element_text(size = 8),
+#         legend.position= "bottom",
+#         legend.title = element_blank())
 
 
 ```
 
-```{r Probabilidades}
+```{r Probabilidades, eval=FALSE}
 library(marginaleffects)
 library(ggeffects)
 
@@ -433,9 +471,9 @@ ggplot(ame_pais, aes(x = reorder(pais_f, estimate), y = estimate)) +
   theme_minimal()
 
 
-mod2_interac <- glm(arreglo_impuestos ~ edad + edad2 + sexo2 + clase_subjetiva4 + just_dist_ingresos_dic + pro_mercado_dic + ayuda_pobres_dinero_f + ayuda_gobierno_tramo_f + pago_impuestos_dic + aceptabilidad_desigualdad + corrupcion_f + ideologia + pais_f * dim1_std, data = latinobarometro2020, weights = wt, family = binomial(link = "logit"), , na.action = na.exclude)
+mod2_interac_a <- glm(arreglo_impuestos ~ edad + edad2 + sexo2 + clase_subjetiva4 + just_dist_ingresos_dic + pro_mercado_dic + ayuda_pobres_dinero_f + ayuda_gobierno_tramo_f + pago_impuestos_dic + aceptabilidad_desigualdad + corrupcion_f + ideologia + pais_f * dim1_std, data = latinobarometro2020, weights = wt, family = binomial(link = "logit"), , na.action = na.exclude)
 
-ame_pais <- avg_slopes(mod2_interac, variables = "dim1_std", by = "pais_f")
+ame_pais <- avg_slopes(mod2_interac_a, variables = "dim1_std", by = "pais_f")
 
 ame_pais$signif <- ame_pais$p.value < 0.05
 
@@ -454,4 +492,104 @@ ggplot(ame_pais, aes(x = reorder(pais_f, estimate), y = estimate, color = signif
   theme_minimal(base_size = 13) +
   theme(legend.position = "none")
 
+mod2_interac_b <- glm(arreglo_impuestos ~ edad + edad2 + sexo2 + dim1_std + clase_subjetiva4 * pais_f + just_dist_ingresos_dic + pro_mercado_dic + ayuda_pobres_dinero_f + ayuda_gobierno_tramo_f + pago_impuestos_dic + aceptabilidad_desigualdad + corrupcion_f + ideologia, data = latinobarometro2020, weights = wt, family = binomial(link = "logit"), na.action = na.exclude)
+
+ame_pais_clase <- avg_slopes(mod2_interac_b, variables = "clase_subjetiva4", by = "pais_f")
+
+
+
+# Agrupar por clase_subjetiva4 antes de resumir
+ame_pais_clase_grouped <- ame_pais_clase %>%
+  group_by(contrast) %>%
+  summarize(
+    mean_estimate = mean(Estimate, na.rm = TRUE),
+    lower_ci = mean(`2.5 %`, na.rm = TRUE),
+    upper_ci = mean(`97.5 %`, na.rm = TRUE)
+  )
+
+# Visualizar el gráfico de barras de los efectos promedio por clase subjetiva
+library(ggplot2)
+ggplot(ame_pais_clase_grouped, aes(x = clase_subjetiva4, y = mean_estimate, fill = mean_estimate > 0)) +
+  geom_bar(stat = "identity") +
+  geom_errorbar(aes(ymin = lower_ci, ymax = upper_ci), width = 0.2) +
+  labs(
+    title = "Efectos promedio de clase subjetiva en la evasión fiscal",
+    x = "Clase Subjetiva", y = "AME promedio (dY/dX)",
+    fill = "Efecto positivo"
+  ) +
+  theme_minimal()
+
+
 ```
+
+
+
+
+```{r Probabilidades estimadas}
+library(ggeffects)
+
+pred_estatus <- ggpredict(mod2_c, terms = c("dim1_std[-1, 0, 1]", "pais_f"),
+                          typical = c(numeric = "mean", factor = "mode"))
+
+avg_pred <- mean(pred_estatus$predicted)
+
+estatus_labs <- c("Bajo (-1)", "Medio (0)", "Alto (1)")
+names(estatus_labs) <- c("-1", "0", "1")
+
+
+pred_estatus %>% 
+  ggplot(aes(x = predicted, y = reorder(group, predicted))) +
+  geom_vline(xintercept = avg_pred, linetype = "dashed", color = "red") +
+  geom_point(position = position_dodge(width = 0.6)) +
+  geom_errorbarh(aes(xmin = conf.low, xmax = conf.high),
+                 height = 0.2, position = position_dodge(width = 0.6)) +
+  facet_wrap(~x, labeller = labeller(x = estatus_labs)) +
+  scale_x_continuous(labels = scales::percent_format(accuracy = 1)) +
+  labs(
+    title = "Probabilidad de evasión según estatus objetivo",
+    subtitle = "Promedio general en línea punteada roja.",
+    caption = "Fuente: elaboración propia en base a Latinobarómetro. \nVariables de control mantenidas en promedio (cuantitativas) y en su moda (cualitativas)."
+  ) +
+  theme(
+    axis.title.x = element_blank(),
+    axis.title.y = element_blank(),
+    strip.text = element_text(face = "bold")
+  ) 
+
+ggsave("graficos/evasion/prediccion_estatus_objetivo.png", width = 8, height = 5, dpi = 300)
+
+
+
+pred_clase <- ggpredict(mod2_c, terms = c("clase_subjetiva4", "pais_f"),
+                        typical = c(numeric = "mean", factor = "mode"))
+
+pred_clase$x <- factor(pred_clase$x, levels = c("Baja", "Media baja", "Media", "Media alta"))
+
+avg_pred <- mean(pred_clase$predicted)
+
+pred_clase %>% 
+  ggplot(aes(x = predicted, y = reorder(group, predicted))) +
+  geom_vline(xintercept = avg_pred, linetype = "dashed", color = "red") +
+  geom_point(position = position_dodge(width = 0.6)) +
+  geom_errorbarh(aes(xmin = conf.low, xmax = conf.high),
+                 height = 0.2, position = position_dodge(width = 0.6)) +
+  facet_wrap(~x, nrow = 1) +
+  scale_x_continuous(labels = scales::percent_format(accuracy = 1)) +
+  scale_color_paletteer_d("PNWColors::Sunset2") +
+  labs(
+    title = "Probabilidad de evasión según clase subjetiva",
+    subtitle = "Promedio general en línea punteada roja.",
+    color = "Clase subjetiva",
+    caption = "Fuente: elaboración propia en base a Latinobarómetro. \nVariables de control mantenidas en promedio (cuantitativas) y en su moda (cualitativas)."
+  ) +
+  theme(
+    axis.title.x = element_blank(),
+    axis.title.y = element_blank(),
+    legend.position = "bottom",
+    strip.text = element_text(face = "bold")
+  )
+
+ggsave("graficos/evasion/prediccion_clase_subjetiva.png", width = 8, height = 5, dpi = 300)
+
+```
+
