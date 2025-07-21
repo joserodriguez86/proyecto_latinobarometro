@@ -64,11 +64,17 @@ latinobarometro <- latinobarometro %>%
 
 ## Construcción de índice de estratificación con ACM
 ```{r ACM}
+latinobarometro <- latinobarometro %>%  
+  mutate(trabajo_f = case_when(
+    estado_ocupacional_f %in% c("Temporalmente no trabaja", "Retirado/pensionado") ~ trabajo_anterior_f, 
+                               estado_ocupacional_f %in% c("No trabaja", "Estudiante") ~ "No trabaja",
+         TRUE ~ trabajo_actual_f))
+
 
 #2020
 var_obj_2020 <- latinobarometro %>%
   filter(anio == 2020) %>%
-  select(trabajo_actual_f, nivel_ed, bienes_comp, bienes_lava, bienes_telef, bienes_celular, bienes_auto, bienes_cloaca, bienes_aguapot,
+  select(trabajo_f, nivel_ed, bienes_comp, bienes_lava, bienes_telef, bienes_celular, bienes_auto, bienes_cloaca, bienes_aguapot,
          bienes_aguacal, bienes_casa, wt)
 
 mca2020 <- speMCA(var_obj_2020[,1:11], ncp = 2, row.w = var_obj_2020$wt)
@@ -115,7 +121,7 @@ latinobarometro2020 %>%
                   country_icons = latinobarometro$iso3,
                   width = 20,
                   lineheight = 2) +
-  labs(title = "Índice de estratificación objetiva",
+  labs(title = "Índice de estratificación social objetiva promedio",
        subtitle = "Países seleccionados de América Latina. 2020",
        caption = "Fuente: elaboración propia en base a Latinobarómetro") +
   theme(axis.title.x = element_blank(),
