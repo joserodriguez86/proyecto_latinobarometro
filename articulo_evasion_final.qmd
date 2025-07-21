@@ -370,7 +370,7 @@ latinobarometro2020$arreglo_impuestos <- as.factor(latinobarometro2020$arreglo_i
 
 latinobarometro2020$edad2 <- latinobarometro2020$edad^2
 
-mod2_a <- glm(arreglo_impuestos ~ edad + edad2 + sexo2 + dim1_std,
+mod2_a <- glm(arreglo_impuestos ~ edad + edad2 + sexo2 + dim1_std + clase_subjetiva4,
                  data = latinobarometro2020, weights = wt, family = binomial(link = "logit"))
 
 mod2_b <- glm(arreglo_impuestos ~ edad + edad2 + sexo2 + dim1_std + clase_subjetiva4 + just_dist_ingresos_dic + pro_mercado_dic + ayuda_pobres_dinero_f + ayuda_gobierno_tramo_f + pago_impuestos_dic + aceptabilidad_desigualdad + corrupcion_f + ideologia, data = latinobarometro2020, weights = wt, family = binomial(link = "logit"))
@@ -380,7 +380,7 @@ mod2_c <- glm(arreglo_impuestos ~ edad + edad2 + sexo2 + dim1_std + clase_subjet
 mod3 <- glm(arreglo_impuestos ~ edad + edad2 + sexo2 + dim1_std + clase_subjetiva4 + just_dist_ingresos_dic + pro_mercado_dic + ayuda_pobres_dinero_f + ayuda_gobierno_tramo_f + pago_impuestos_dic + aceptabilidad_desigualdad + corrupcion_f + ideologia, data = subset(latinobarometro2020, iso3 == "ARG"), weights = wt, family = binomial(link = "logit"), na.action = na.exclude)
 
 
-mod1 <- export_summs(mod2_a, mod2_b, mod2_c, mod3, model.names = c("Objetivas", "Objetivas + mediadoras", "Efecto fijo países", "Sólo Argentina"), 
+mod1 <- export_summs(mod2_a, mod2_b, mod2_c, mod3, model.names = c("Variables estratificación", "Estratificación + mediadoras", "Efecto fijo países", "Sólo Argentina"), 
                      exp = T, stars = c(`***` = 0.01, `**` = 0.05, `*` = 0.1),
                      error_pos = "same",
                      coefs = c("Edad" = "edad",
