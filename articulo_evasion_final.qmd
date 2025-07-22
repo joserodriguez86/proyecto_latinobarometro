@@ -19,7 +19,8 @@ rm(list = ls())
 pacman::p_load(tidyverse, Hmisc, gtsummary, GDAtools, jtools, huxtable, survey, ggoxford, ggtext, factoextra, paletteer)
 
 load("bases/latinobarometro_select.RData")
-load("bases/ingresos_tributarios_wb_tot.RData")  
+load("bases/ingresos_tributarios_wb_tot.RData")
+load("bases/base_datos_agregados.RData")
 
 ingresos_tributarios_wb_tot <- ingresos_tributarios_wb_tot %>% 
   rename(iso3 = pais)
@@ -58,6 +59,14 @@ latinobarometro <- latinobarometro %>%
 latinobarometro <- latinobarometro %>% 
   left_join(ingresos_tributarios_wb_tot, by = c("anio", "iso3"))
 
+#Unión bases individual y agregada
+latinobarometro <- latinobarometro %>% 
+  left_join(datos_paises, by = c("anio", "iso3")) 
+
+latinobarometro <- latinobarometro %>% 
+  mutate(anio_pais = interaction(iso3, anio))
+
+latinobarometro$pib_ppa_log <- log(latinobarometro$pib_ppa)
 
 ```
 
@@ -121,7 +130,7 @@ latinobarometro2020 %>%
                   country_icons = latinobarometro$iso3,
                   width = 20,
                   lineheight = 2) +
-  labs(title = "Índice de estratificación social objetiva promedio",
+  labs(title = "Gráfico 1. Índice de estratificación social objetiva promedio",
        subtitle = "Países seleccionados de América Latina. 2020",
        caption = "Fuente: elaboración propia en base a Latinobarómetro") +
   theme(axis.title.x = element_blank(),
@@ -129,7 +138,7 @@ latinobarometro2020 %>%
         axis.text.y = element_text(size = 11)) +
   scale_y_continuous(limits = c(-1, 1), breaks = seq(-1, 1, .5))
 
-ggsave("graficos/evasion/estratificacion_objetiva.png", width = 8, height = 5, dpi = 300)
+ggsave("graficos/evasion/estratificacion_objetiva.png", width = 7, height = 5, dpi = 300)
 
 ```
 ## Datos descriptivos
@@ -179,7 +188,7 @@ latinobarometro %>%
     size = 2.5, vjust = -0.8,hjust = 1
   ) +
   labs(
-    title = "Evolución del porcentaje de personas que pagaron menos impuestos del que debían",
+    title = "Gráfico 3. Evolución del porcentaje de personas que pagaron menos impuestos \ndel que debían",
     subtitle = "Países seleccionados. 1998-2020 (Promedio general en línea punteada roja).",
     caption = "Fuente: elaboración propia en base a Latinobarómetro"
   ) + 
@@ -192,10 +201,10 @@ latinobarometro %>%
   ) +
   scale_y_continuous(labels = scales::percent_format(accuracy = 1, suffix = ""), breaks = seq(0, .5, 0.15), limits = c(0, .5)) +
   scale_x_continuous(breaks = seq(1998, 2020, 2), limits = c(1998, 2020)) +
-  facet_wrap(~iso3, ncol = 4)
+  facet_wrap(~iso3, ncol = 3)
 
 
-ggsave("graficos/evasion/porcentaje_evasion_impuestos.png", width = 8, height = 5, dpi = 300)
+ggsave("graficos/evasion/porcentaje_evasion_impuestos.png", width = 6, height = 5, dpi = 300)
 
 ```
 
@@ -217,7 +226,7 @@ latinobarometro %>%
                   country_icons = latinobarometro$iso3,
                   width = 20,
                   lineheight = 2) +
-  labs(title = "Porcentaje de personas que pagaron menos impuestos de lo debían",
+  labs(title = "Gráfico 2. Porcentaje de personas que pagaron menos impuestos de lo debían",
        subtitle = "Países de América Latina. 2020",
        caption = "Fuente: elaboración propia en base a Latinobarómetro") +
   theme(axis.title.x = element_blank(),
@@ -225,6 +234,8 @@ latinobarometro %>%
         legend.position = "none") +
   scale_y_continuous(labels = scales::percent_format(accuracy = 1), breaks = seq(0, .4, 0.05), limits = c(0, .4)) +
   scale_fill_manual(values = ifelse(levels(latinobarometro$pais_f) == "Arg", "red", "grey")) 
+
+ggsave("graficos/evasion/porcentaje_evasion_impuestos_paises.png", width = 7, height = 5, dpi = 300)
 
 ```
 
@@ -249,18 +260,18 @@ latinobarometro2020 %>%
     evasion = weighted.mean(arreglo_impuestos, wt = wt, na.rm = T)) %>% 
   ggplot(aes(x = promedio, y = evasion)) +
   geom_point(size = 2, alpha = .5) +
-  geom_smooth(method = "lm", se = TRUE, size = .5, color = "red") +
+  geom_smooth(method = "lm", se = TRUE, linewidth = .5, color = "red") +
   ggrepel::geom_text_repel(aes(label = iso3), size = 2.5, show.legend = FALSE) +
   annotate("text",
            x = 0.32, y = 0.39,  # Ajustá posición
            label = paste0("R² = ", round(r2, 3)),
            size = 3.5, hjust = 0) +
-  labs(title = "Arreglo para pagar menos impuestos y estratificación objetiva",
+  labs(title = "Gráfico 4. Incumplimiento impositivo y estratificación social objetiva",
        subtitle = "Países de América Latina. 2020. Error estándar en gris.",
        caption = "Fuente: elaboración propia en base a Latinobarómetro.  
        Chile fue descartado en este gráfico ya que puede considerarse un caso *outlier*.",
        y = "Arreglo para pagar menos impuestos",
-       x = "Estratificación objetiva") +
+       x = "Estratificación social objetiva media de países") +
   theme(axis.title.x = element_text(size = 10),
         axis.title.y = element_text(size = 10),
         axis.text.x = element_text(size = 9),
@@ -269,7 +280,8 @@ latinobarometro2020 %>%
   scale_y_continuous(labels = scales::percent_format(accuracy = 1), breaks = seq(.15, .4, 0.05), limits = c(.15, .4)) +
   scale_x_continuous(labels = scales::number_format(accuracy = 0.1), breaks = seq(-1, 1, 0.2), limits = c(-1, 1))
 
-ggsave("graficos/evasion/estratificacion_evasion.png", width = 8, height = 5, dpi = 300)
+ggsave("graficos/evasion/estratificacion_evasion.png", width = 7, height = 5, dpi = 300)
+
 
 ```
 
@@ -282,7 +294,7 @@ latinobarometro2020 %>%
   ggplot(aes(x = clase_subjetiva4, y = promedio)) +
   geom_bar(stat = "identity", fill = "steelblue", alpha = .8) +
   geom_hline(yintercept = prom_evasion$evasion, linetype = "dashed", color = "red") +
-  labs(title = "Porcentaje de personas que pagaron menos impuestos de lo debían según clase social subjetiva",
+  labs(title = "Gráfico 5. Porcentaje de personas que pagaron menos impuestos de lo debían según \nclase social subjetiva",
        subtitle = "Países de América Latina. 2020 (Porcentaje general en línea punteada roja).",
        caption = "Fuente: elaboración propia en base a Latinobarómetro") +
   theme(
@@ -295,10 +307,26 @@ latinobarometro2020 %>%
   ) +
   scale_y_continuous(labels = scales::percent_format(accuracy = 1, suffix = ""), breaks = seq(0, .65, 0.15), limits = c(0, .65)) +
   scale_x_discrete(labels = function(x) str_wrap(x, width = 5)) +
-  facet_wrap(~iso3, ncol = 4)
+  facet_wrap(~iso3, ncol = 3)
   
   
-ggsave("graficos/evasion/porcentaje_evasion_impuestos_clase_subjetiva.png", width = 8, height = 5, dpi = 300)
+ggsave("graficos/evasion/porcentaje_evasion_impuestos_clase_subjetiva.png", width = 6, height = 5, dpi = 300)
+
+
+latinobarometro2020 %>%
+  filter(!is.na(clase_subjetiva4)) %>% 
+  mutate(clase_media = ifelse(clase_subjetiva4 == "Media alta", 1, 0)) %>%
+  group_by(iso3) %>%
+  summarise(
+    promedio = weighted.mean(arreglo_impuestos, wt = wt, na.rm = TRUE),
+    porc_media = weighted.mean(clase_media, wt, na.rm = TRUE)
+  ) %>% 
+  ggplot(aes(x = porc_media, y = promedio)) +
+  geom_point(size = 2, alpha = .5) +
+  geom_smooth(method = "lm", se = TRUE, linewidth = .5, color = "red") +
+  ggrepel::geom_text_repel(aes(label = iso3), size = 2.5, show.legend = FALSE)
+
+
 
 ```
 
@@ -552,7 +580,7 @@ pred_estatus %>%
   facet_wrap(~x, labeller = labeller(x = estatus_labs)) +
   scale_x_continuous(labels = scales::percent_format(accuracy = 1)) +
   labs(
-    title = "Probabilidad de evasión según estatus objetivo",
+    title = "Gráfico 6. Probabilidad de incumplimiento impositivo según estatus objetivo",
     subtitle = "Promedio general en línea punteada roja.",
     caption = "Fuente: elaboración propia en base a Latinobarómetro. \nVariables de control mantenidas en promedio (cuantitativas) y en su moda (cualitativas)."
   ) +
@@ -583,7 +611,7 @@ pred_clase %>%
   scale_x_continuous(labels = scales::percent_format(accuracy = 1)) +
   scale_color_paletteer_d("PNWColors::Sunset2") +
   labs(
-    title = "Probabilidad de evasión según clase subjetiva",
+    title = "Gráfico 7. Probabilidad de incumplimiento impositivo según clase subjetiva",
     subtitle = "Promedio general en línea punteada roja.",
     color = "Clase subjetiva",
     caption = "Fuente: elaboración propia en base a Latinobarómetro. \nVariables de control mantenidas en promedio (cuantitativas) y en su moda (cualitativas)."
@@ -596,6 +624,146 @@ pred_clase %>%
   )
 
 ggsave("graficos/evasion/prediccion_clase_subjetiva.png", width = 8, height = 5, dpi = 300)
+
+```
+# Anexo
+
+```{r Anexo}
+latinobarometro %>% 
+  filter(anio == 2020 | anio == 2010, !iso3 %in% c("VEN", "NIC")) %>%
+  group_by(anio_pais) %>%
+  summarise(
+    impuestos = weighted.mean(arreglo_impuestos, wt = wt, na.rm = T),
+    pib_ppa = mean(pib_ppa, na.rm = T)) %>% 
+  ggplot(aes(x = pib_ppa, y = impuestos)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = T, color = "red") +
+  ggpmisc::stat_poly_eq(
+    formula = y ~ x,  # Fórmula del modelo lineal
+    aes(label = paste(after_stat(rr.label), sep = "*\", \"*")),  # Mostrar R²
+    parse = TRUE,
+    label.x = "right",  # Posición de la leyenda
+    size = 4
+  ) +
+  ggrepel::geom_text_repel(aes(label = anio_pais), size = 2.5) +
+  labs(title = "Gráfico 8. Incumplimiento impositiva y PIB per cápita",
+       subtitle = "Países de América Latina. 2010 y 2020",
+       caption = "Fuente: elaboración propia en base a Latinobarómetro y World Development Indicators (Banco Mundial)",
+       y = "% de incumplimiento impositivo",
+       x = "PIB per cápita (U$S PPA)") +
+  scale_x_continuous(labels = scales::dollar_format(accuracy = 1, prefix = "$"), 
+                     breaks = seq(5000, 30000, 5000), limits = c(5000, 30000)) +
+  scale_y_continuous(labels = scales::percent_format(accuracy = 1), breaks = seq(0, .4, 0.05), limits = c(0, .4))
+
+ggsave("graficos/evasion/evasion_pib.png", width = 8, height = 5)
+
+latinobarometro %>% 
+  filter(anio == 2020 | anio == 2010, !iso3 %in% c("VEN", "NIC")) %>%
+  group_by(anio_pais) %>%
+  summarise(
+    impuestos = weighted.mean(arreglo_impuestos, wt = wt, na.rm = T),
+    gini = mean(gini, na.rm = T)) %>% 
+  ggplot(aes(x = gini, y = impuestos)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = T, color = "red") +
+    ggpmisc::stat_poly_eq(
+    formula = y ~ x,  # Fórmula del modelo lineal
+    aes(label = paste(after_stat(rr.label), sep = "*\", \"*")),  # Mostrar R²
+    parse = TRUE,
+    label.x = "right",  # Posición de la leyenda
+    size = 4
+  ) +
+  ggrepel::geom_text_repel(aes(label = anio_pais), size = 2.5) +
+  labs(title = "Gráfico 9. Incumplimiento impositivo e índice de Gini",
+       subtitle = "Países de América Latina. 2010 y 2020",
+       caption = "Fuente: elaboración propia en base a Latinobarómetro y CEPAL",
+       y = "% de incumplimiento impositivo",
+       x = "Índice de Gini") +
+  scale_y_continuous(labels = scales::percent_format(accuracy = 1), breaks = seq(0, .4, 0.05), limits = c(0, .4))
+
+ggsave("graficos/evasion/evasion_gini.png", width = 8, height = 5)
+
+
+latinobarometro %>% 
+  filter(anio == 2020 | anio == 2010, !iso3 %in% c("VEN", "NIC")) %>%
+  group_by(anio_pais) %>%
+  summarise(
+    impuestos_ind = weighted.mean(arreglo_impuestos, wt = wt, na.rm = T),
+    impuestos_pbi = mean(impuestos_tot, na.rm = T)) %>% 
+  ggplot(aes(x = impuestos_pbi, y = impuestos_ind)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = T, color = "red") +
+    ggpmisc::stat_poly_eq(
+    formula = y ~ x,  # Fórmula del modelo lineal
+    aes(label = paste(after_stat(rr.label), sep = "*\", \"*")),  # Mostrar R²
+    parse = TRUE,
+    label.x = "right",  # Posición de la leyenda
+    size = 4
+  ) +
+  ggrepel::geom_text_repel(aes(label = anio_pais), size = 2.5) +
+  labs(title = "Gráfico 10. Incumplimiento impositivo y % ingresos fiscales / PIB",
+       subtitle = "Países de América Latina. 2010 y 2020",
+       caption = "Fuente: elaboración propia en base a Latinobarómetro y Tax Revenue Dashboard (Banco Mundial)",
+       y = "% de incumplimiento impositivo",
+       x = "Ingresos fiscales / PIB") +
+  scale_y_continuous(labels = scales::percent_format(accuracy = 1), breaks = seq(0, .4, 0.05), limits = c(0, .4))
+
+ggsave("graficos/evasion/evasion_impuestos_pbi.png", width = 8, height = 5)
+
+
+latinobarometro %>% 
+  filter(anio == 2020 | anio == 2010, !iso3 %in% c("VEN", "NIC")) %>%
+  group_by(anio_pais) %>%
+  summarise(
+    impuestos = weighted.mean(arreglo_impuestos, wt = wt, na.rm = T),
+    informalidad = mean(informalidad, na.rm = T)) %>% 
+  ggplot(aes(x = informalidad, y = impuestos)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = T, color = "red") +
+    ggpmisc::stat_poly_eq(
+    formula = y ~ x,  # Fórmula del modelo lineal
+    aes(label = paste(after_stat(rr.label), sep = "*\", \"*")),  # Mostrar R²
+    parse = TRUE,
+    label.x = "right",  # Posición de la leyenda
+    size = 4
+  ) +
+  ggrepel::geom_text_repel(aes(label = anio_pais), size = 2.5) +
+  labs(title = "Gráfico 11. Incumplimiento impositivo y % de informalidad laboral",
+       subtitle = "Países de América Latina. 2010 y 2020",
+       caption = "Fuente: elaboración propia en base a Latinobarómetro e ILOStat",
+       y = "% de incumplimiento impositivo",
+       x = "% de informalidad") +
+  scale_y_continuous(labels = scales::percent_format(accuracy = 1), breaks = seq(0, .4, 0.05), limits = c(0, .4))
+
+ggsave("graficos/evasion/evasion_informalidad.png", width = 8, height = 5)
+
+latinobarometro %>% 
+  filter(anio == 2020 | anio == 2010, !iso3 %in% c("VEN", "NIC")) %>%
+  group_by(anio_pais) %>%
+  summarise(
+    impuestos = weighted.mean(arreglo_impuestos, wt = wt, na.rm = T),
+    ocupaciones_medias = mean(ocupaciones_medias, na.rm = T)) %>% 
+  ggplot(aes(x = ocupaciones_medias, y = impuestos)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = T, color = "red") +
+    ggpmisc::stat_poly_eq(
+    formula = y ~ x,  # Fórmula del modelo lineal
+    aes(label = paste(after_stat(rr.label), sep = "*\", \"*")),  # Mostrar R²
+    parse = TRUE,
+    label.x = "right",  # Posición de la leyenda
+    size = 4
+  ) +
+  ggrepel::geom_text_repel(aes(label = anio_pais), size = 2.5) +
+  labs(title = "Gráfico 12. Incumplimiento impositivo y % de clases medias",
+       subtitle = "Países de América Latina. 2010 y 2020",
+       caption = "Fuente: elaboración propia en base a Latinobarómetro, CEPAL e ILOStat",
+       y = "% de incumplimiento impositivo",
+       x = "% de clases medias") +
+  scale_y_continuous(labels = scales::percent_format(accuracy = 1), breaks = seq(0, .4, 0.05), limits = c(0, .4))
+
+ggsave("graficos/evasion/evasion_clases_medias.png", width = 8, height = 5)
+
+
 
 ```
 
