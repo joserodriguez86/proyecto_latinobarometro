@@ -11,7 +11,6 @@ execute:
   message: false
 ---
 
-
 ## Librerías y bases
 ```{r }
 rm(list = ls())
@@ -188,7 +187,7 @@ latinobarometro %>%
     size = 2.5, vjust = -0.8,hjust = 1
   ) +
   labs(
-    title = "Gráfico 3. Evolución del porcentaje de personas que pagaron menos impuestos \ndel que debían",
+    title = "Gráfico 3. Evolución del porcentaje de personas que conoce a alguien \nque pagó menos impuestos del que debían",
     subtitle = "Países seleccionados. 1998-2020 (Promedio general en línea punteada roja).",
     caption = "Fuente: elaboración propia en base a Latinobarómetro"
   ) + 
@@ -226,7 +225,7 @@ latinobarometro %>%
                   country_icons = latinobarometro$iso3,
                   width = 20,
                   lineheight = 2) +
-  labs(title = "Gráfico 2. Porcentaje de personas que pagaron menos impuestos de lo debían",
+  labs(title = "Gráfico 2. Porcentaje de personas que conoce a alguien que pagó menos \nimpuestos de lo que debía",
        subtitle = "Países de América Latina. 2020",
        caption = "Fuente: elaboración propia en base a Latinobarómetro") +
   theme(axis.title.x = element_blank(),
@@ -294,7 +293,7 @@ latinobarometro2020 %>%
   ggplot(aes(x = clase_subjetiva4, y = promedio)) +
   geom_bar(stat = "identity", fill = "steelblue", alpha = .8) +
   geom_hline(yintercept = prom_evasion$evasion, linetype = "dashed", color = "red") +
-  labs(title = "Gráfico 5. Porcentaje de personas que pagaron menos impuestos de lo debían según \nclase social subjetiva",
+  labs(title = "Gráfico 5. Porcentaje de personas que conoce a alguien que pagó menos \nimpuestos de lo debían según clase social subjetiva",
        subtitle = "Países de América Latina. 2020 (Porcentaje general en línea punteada roja).",
        caption = "Fuente: elaboración propia en base a Latinobarómetro") +
   theme(
@@ -562,13 +561,13 @@ ggplot(ame_pais_clase_grouped, aes(x = clase_subjetiva4, y = mean_estimate, fill
 ```{r Probabilidades estimadas}
 library(ggeffects)
 
-pred_estatus <- ggpredict(mod2_c, terms = c("dim1_std[-1, 0, 1]", "pais_f"),
+pred_estatus <- ggpredict(mod2_c, terms = c("dim1_std[-2, -1, 0, 1, 2]", "pais_f"),
                           typical = c(numeric = "mean", factor = "mode"))
 
 avg_pred <- mean(pred_estatus$predicted)
 
-estatus_labs <- c("Bajo (-1)", "Medio (0)", "Alto (1)")
-names(estatus_labs) <- c("-1", "0", "1")
+estatus_labs <- c("Muy bajo (-2)", "Bajo (-1)", "Medio (0)", "Alto (1)", "Muy alto (2)")
+names(estatus_labs) <- c("-2", "-1", "0", "1", "2")
 
 
 pred_estatus %>% 
@@ -577,7 +576,7 @@ pred_estatus %>%
   geom_point(position = position_dodge(width = 0.6)) +
   geom_errorbarh(aes(xmin = conf.low, xmax = conf.high),
                  height = 0.2, position = position_dodge(width = 0.6)) +
-  facet_wrap(~x, labeller = labeller(x = estatus_labs)) +
+  facet_wrap(~x, labeller = labeller(x = estatus_labs), ncol = 5) +
   scale_x_continuous(labels = scales::percent_format(accuracy = 1)) +
   labs(
     title = "Gráfico 6. Probabilidad de incumplimiento impositivo según estatus objetivo",
@@ -646,7 +645,7 @@ latinobarometro %>%
     size = 4
   ) +
   ggrepel::geom_text_repel(aes(label = anio_pais), size = 2.5) +
-  labs(title = "Gráfico 8. Incumplimiento impositiva y PIB per cápita",
+  labs(title = "Gráfico 8. Incumplimiento impositivo y PIB per cápita",
        subtitle = "Países de América Latina. 2010 y 2020",
        caption = "Fuente: elaboración propia en base a Latinobarómetro y World Development Indicators (Banco Mundial)",
        y = "% de incumplimiento impositivo",
