@@ -91,7 +91,9 @@ mca2020 <- flip.mca(mca2020, dim = 1)
 
 modif.rate(mca2020)$modif
 
-tabcontrib(mca2020, dim = 1, best = T)
+contribuciones <- tabcontrib(mca2020, dim = 1, best = F)
+
+openxlsx::write.xlsx(contribuciones, "graficos/evasion/contribuciones_mca_2020.xlsx")
 
 ggcloud_variables(mca2020, vlab = T, shapes = T, shapesize = 1.5, force = 2,
                   textsize = 2.3, ) + 
