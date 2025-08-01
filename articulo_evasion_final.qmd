@@ -402,6 +402,7 @@ latinobarometro2020$ayuda_gobierno_tramo_f <- relevel(latinobarometro2020$ayuda_
 # latinobarometro2020$corrupcion_f <- relevel(latinobarometro2020$corrupcion_f, ref = "Nada")
 
 latinobarometro2020$arreglo_impuestos <- as.factor(latinobarometro2020$arreglo_impuestos)
+latinobarometro2020$arreglo_impuestos <- relevel(latinobarometro2020$arreglo_impuestos, ref = "0")
 
 latinobarometro2020$edad2 <- latinobarometro2020$edad^2
 
@@ -410,9 +411,9 @@ mod2_a <- glm(arreglo_impuestos ~ edad + edad2 + sexo2 + dim1_std + clase_subjet
 
 mod2_b <- glm(arreglo_impuestos ~ edad + edad2 + sexo2 + dim1_std + clase_subjetiva4 + just_dist_ingresos_dic + pro_mercado_dic + ayuda_pobres_dinero_f + ayuda_gobierno_tramo_f + pago_impuestos_dic + aceptabilidad_desigualdad + corrupcion_f + ideologia, data = latinobarometro2020, weights = wt, family = binomial(link = "logit"))
 
-mod2_c <- glm(arreglo_impuestos ~ edad + edad2 + sexo2 + dim1_std + clase_subjetiva4 + just_dist_ingresos_dic + pro_mercado_dic + ayuda_pobres_dinero_f + ayuda_gobierno_tramo_f + pago_impuestos_dic + aceptabilidad_desigualdad + corrupcion_f + ideologia + pais_f, data = latinobarometro2020, weights = wt, family = binomial(link = "logit"), na.action = na.exclude)
+mod2_c <- glm(arreglo_impuestos ~ edad + edad2 + sexo2 + dim1_std + clase_subjetiva4 + just_dist_ingresos_dic + pro_mercado_dic + ayuda_pobres_dinero_f + ayuda_gobierno_tramo_f + pago_impuestos_dic + aceptabilidad_desigualdad + corrupcion_f + ideologia + pais_f, data = latinobarometro2020, weights = wt, family = binomial(link = "logit"), na.action = na.omit)
 
-mod3 <- glm(arreglo_impuestos ~ edad + edad2 + sexo2 + dim1_std + clase_subjetiva4 + just_dist_ingresos_dic + pro_mercado_dic + ayuda_pobres_dinero_f + ayuda_gobierno_tramo_f + pago_impuestos_dic + aceptabilidad_desigualdad + corrupcion_f + ideologia, data = subset(latinobarometro2020, iso3 == "ARG"), weights = wt, family = binomial(link = "logit"), na.action = na.exclude)
+mod3 <- glm(arreglo_impuestos ~ edad + edad2 + sexo2 + dim1_std + clase_subjetiva4 + just_dist_ingresos_dic + pro_mercado_dic + ayuda_pobres_dinero_f + ayuda_gobierno_tramo_f + pago_impuestos_dic + aceptabilidad_desigualdad + corrupcion_f + ideologia, data = subset(latinobarometro2020, iso3 == "ARG"), weights = wt, family = binomial(link = "logit"), na.action = na.omit)
 
 
 mod1 <- export_summs(mod2_a, mod2_b, mod2_c, mod3, model.names = c("Variables estratificación", "Estratificación + mediadoras", "Efecto fijo países", "Sólo Argentina"), 
@@ -484,6 +485,52 @@ mod1 <- mod1 %>%
 #         legend.position= "bottom",
 #         legend.title = element_blank())
 
+#Hosmer-Lemeshow test
+library(ResourceSelection)
+hoslem.test(y, yhat, g = 5)
+
+#Matriz de confusión-----------------
+# Predicciones probabilísticas
+yhat <- fitted(mod2_c)
+
+# Convertir las probabilidades a predicciones binarias (0 o 1)
+pred_binaria <- ifelse(yhat > .4, 1, 0)
+
+# Verdaderos valores
+y <- model.response(model.frame(mod2_c))
+
+# Matriz de confusión
+library(caret)
+conf_matrix <- confusionMatrix(as.factor(pred_binaria), as.factor(y),positive = "1")
+print(conf_matrix)
+
+
+# Métricas individuales de la matriz de confusión
+accuracy <- conf_matrix$overall['Accuracy']
+sensitivity <- conf_matrix$byClass['Sensitivity']
+specificity <- conf_matrix$byClass['Specificity']
+precision <- conf_matrix$byClass['Precision']
+f1_score <- conf_matrix$byClass['F1']
+
+# Imprimir las métricas
+cat("Accuracy: ", accuracy, "\n")
+cat("Sensitivity: ", sensitivity, "\n")
+cat("Specificity: ", specificity, "\n")
+cat("Precision: ", precision, "\n")
+cat("F1 Score: ", f1_score, "\n")
+
+# Curva ROC y AUC
+library(pROC)
+
+# Calcular AUC
+roc_curve <- roc(y, yhat)
+auc_value <- auc(roc_curve)
+
+# Graficar la curva ROC
+plot(roc_curve, main = paste("AUC =", round(auc_value, 2)))
+
+# Imprimir AUC
+cat("AUC: ", auc_value, "\n")
 
 ```
 
