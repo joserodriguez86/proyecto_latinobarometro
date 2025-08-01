@@ -690,7 +690,9 @@ latinobarometro <- latinobarometro %>%
                                 anio == 2015 ~ P67ST,
                                 anio == 2017 ~ P38ST,
                                 anio == 2020 ~ p70st,	
-                                anio == 2023 ~ P60ST))
+                                anio == 2023 ~ P60ST),
+         confianza_gobierno = case_when(anio == 2020 ~ p13st_e,
+                                        TRUE ~ NA_real_))
 
 
 # Recodificación y categorías---------
@@ -742,7 +744,8 @@ seleccion_variables <- c("democracia",
                          "ayuda_gobierno_tramo",
                          "pago_impuestos_tramo",
                          "aceptabilidad_desigualdad",
-                         "corrupcion")
+                         "corrupcion",
+                         "confianza_gobierno")
 
 for (i in seleccion_variables) {
   latinobarometro[[i]] <- ifelse(latinobarometro[[i]] < 0, NA, latinobarometro[[i]])
@@ -856,7 +859,10 @@ latinobarometro <- latinobarometro %>%
                                                TRUE ~ NA_character_)),
          corrupcion_f = factor(case_when(corrupcion %in% c(1, 2, 3) ~ "Mucho-Algo-Poco",
                                          corrupcion == 4 ~ "Nada",
-                                         TRUE ~ NA_character_)))
+                                         TRUE ~ NA_character_)),
+         confianza_gobierno_f = factor(case_when(confianza_gobierno %in% c(1,2) ~ "Mucha-Algo",
+                                                confianza_gobierno %in% c(3, 4) ~ "Poca-Ninguna",
+                                                TRUE ~ NA_character_)))
          
                                       
          
@@ -947,7 +953,8 @@ orden_variables <- c("entrevista",
                      "pago_impuestos_tramo_f",
                      "pago_impuestos_dic",
                      "aceptabilidad_desigualdad",
-                     "corrupcion_f")
+                     "corrupcion_f",
+                     "confianza_gobierno_f")
 
 latinobarometro <- latinobarometro %>% 
   select(all_of(orden_variables))
