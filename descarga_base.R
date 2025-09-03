@@ -38,6 +38,11 @@ latinobarometro2018 <- read_dta("latinobarometro2018.dta")
 latinobarometro2020 <- read_dta("latinobarometro2020.dta")
 latinobarometro2023 <- read_dta("latinobarometro2023.dta")
 
+#Solo 2024
+latinobarometro2024 <- tempfile()
+download.file("http://www.latinobarometro.org/documents/LAT-2024/latinobarometro-2024-csv-v20250817.zip",latinobarometro2024)
+latinobarometro2024 <- read_delim(unz(latinobarometro2024, "Latinobarometro_2024_Csv_esp_v20250817.csv"), delim = ";")
+
 latinobarometro1998 <- zap_labels(latinobarometro1998)
 latinobarometro2000 <- zap_labels(latinobarometro2000)
 latinobarometro2001 <- zap_labels(latinobarometro2001)
@@ -60,16 +65,12 @@ latinobarometro2020 <- zap_labels(latinobarometro2020)
 latinobarometro2023 <- zap_labels(latinobarometro2023)
 
 
-
-
-
-
 unlink(c("latinobarometro1998.dta", "latinobarometro2000.dta", "latinobarometro2001.dta", "latinobarometro2002.dta", "latinobarometro2003.dta", "latinobarometro2004.dta", "latinobarometro2005.dta", "latinobarometro2006.dta", "latinobarometro2007.dta", "latinobarometro2008.dta", "latinobarometro2009.dta", "latinobarometro2010.dta", "latinobarometro2011.dta", "latinobarometro2013.dta", "latinobarometro2015.dta", "latinobarometro2016.dta", "latinobarometro2017.dta", "latinobarometro2018.dta", "Latinobarometro2020.dta", "Latinobarometro2023.dta"))
 
 
 #Pegado de bases ----------------
 latinobarometro <- latinobarometro1998 %>% 
-  bind_rows(latinobarometro2000, latinobarometro2001, latinobarometro2002, latinobarometro2003, latinobarometro2004, latinobarometro2005, latinobarometro2006, latinobarometro2007, latinobarometro2008, latinobarometro2009, latinobarometro2010, latinobarometro2011, latinobarometro2013, latinobarometro2015, latinobarometro2016, latinobarometro2017, latinobarometro2018, latinobarometro2020, latinobarometro2023)
+  bind_rows(latinobarometro2000, latinobarometro2001, latinobarometro2002, latinobarometro2003, latinobarometro2004, latinobarometro2005, latinobarometro2006, latinobarometro2007, latinobarometro2008, latinobarometro2009, latinobarometro2010, latinobarometro2011, latinobarometro2013, latinobarometro2015, latinobarometro2016, latinobarometro2017, latinobarometro2018, latinobarometro2020, latinobarometro2023, latinobarometro2024)
 
 rm(latinobarometro1998, latinobarometro2000, latinobarometro2001, latinobarometro2002, latinobarometro2003, latinobarometro2004, latinobarometro2005, latinobarometro2006, latinobarometro2007, latinobarometro2008, latinobarometro2009, latinobarometro2010, latinobarometro2011, latinobarometro2013, latinobarometro2015, latinobarometro2016, latinobarometro2017, latinobarometro2018, latinobarometro2020, latinobarometro2023)
 

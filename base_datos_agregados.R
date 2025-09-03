@@ -111,7 +111,7 @@ datos_wdi <- WDI(country = c("ARG", "BOL", "BRA", "CHL", "COL", "CRI", "DOM", "E
                 "URY", "VEN"), 
     indicator = c("pib_ppa" = "NY.GDP.PCAP.PP.KD"), 
     start = 2010, 
-    end = 2023, extra = FALSE, cache = NULL, latest = NULL, language = "es")
+    end = 2024, extra = FALSE, cache = NULL, latest = NULL, language = "es")
 
 pib <- datos_wdi %>%
   select(iso3c, year, pib_ppa) %>% 

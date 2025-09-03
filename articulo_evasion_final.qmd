@@ -189,7 +189,7 @@ latinobarometro %>%
     size = 2.5, vjust = -0.8,hjust = 1
   ) +
   labs(
-    title = "Gráfico 3. Evolución del porcentaje de personas que conoce a alguien \nque pagó menos impuestos del que debían",
+    title = "Gráfico 3. Evolución del porcentaje de personas que conoce a alguien \nque pagó menos impuestos de los que debía",
     subtitle = "Países seleccionados. 1998-2020 (Promedio general en línea punteada roja).",
     caption = "Fuente: elaboración propia en base a Latinobarómetro"
   ) + 
@@ -227,7 +227,7 @@ latinobarometro %>%
                   country_icons = latinobarometro$iso3,
                   width = 20,
                   lineheight = 2) +
-  labs(title = "Gráfico 2. Porcentaje de personas que conoce a alguien que pagó menos \nimpuestos de lo que debía",
+  labs(title = "Gráfico 2. Porcentaje de personas que conoce a alguien que pagó menos \nimpuestos de los que debía",
        subtitle = "Países de América Latina. 2020",
        caption = "Fuente: elaboración propia en base a Latinobarómetro") +
   theme(axis.title.x = element_blank(),
@@ -295,7 +295,7 @@ latinobarometro2020 %>%
   ggplot(aes(x = clase_subjetiva4, y = promedio)) +
   geom_bar(stat = "identity", fill = "steelblue", alpha = .8) +
   geom_hline(yintercept = prom_evasion$evasion, linetype = "dashed", color = "red") +
-  labs(title = "Gráfico 5. Porcentaje de personas que conoce a alguien que pagó menos \nimpuestos de lo debían según clase social subjetiva",
+  labs(title = "Gráfico 5. Porcentaje de personas que conoce a alguien que pagó menos \nimpuestos de lo que debía, según clase social subjetiva",
        subtitle = "Países de América Latina. 2020 (Porcentaje general en línea punteada roja).",
        caption = "Fuente: elaboración propia en base a Latinobarómetro") +
   theme(
@@ -485,52 +485,52 @@ mod1 <- mod1 %>%
 #         legend.position= "bottom",
 #         legend.title = element_blank())
 
-#Hosmer-Lemeshow test
-library(ResourceSelection)
-hoslem.test(y, yhat, g = 5)
-
-#Matriz de confusión-----------------
-# Predicciones probabilísticas
-yhat <- fitted(mod2_c)
-
-# Convertir las probabilidades a predicciones binarias (0 o 1)
-pred_binaria <- ifelse(yhat > .4, 1, 0)
-
-# Verdaderos valores
-y <- model.response(model.frame(mod2_c))
-
-# Matriz de confusión
-library(caret)
-conf_matrix <- confusionMatrix(as.factor(pred_binaria), as.factor(y),positive = "1")
-print(conf_matrix)
-
-
-# Métricas individuales de la matriz de confusión
-accuracy <- conf_matrix$overall['Accuracy']
-sensitivity <- conf_matrix$byClass['Sensitivity']
-specificity <- conf_matrix$byClass['Specificity']
-precision <- conf_matrix$byClass['Precision']
-f1_score <- conf_matrix$byClass['F1']
-
-# Imprimir las métricas
-cat("Accuracy: ", accuracy, "\n")
-cat("Sensitivity: ", sensitivity, "\n")
-cat("Specificity: ", specificity, "\n")
-cat("Precision: ", precision, "\n")
-cat("F1 Score: ", f1_score, "\n")
-
-# Curva ROC y AUC
-library(pROC)
-
-# Calcular AUC
-roc_curve <- roc(y, yhat)
-auc_value <- auc(roc_curve)
-
-# Graficar la curva ROC
-plot(roc_curve, main = paste("AUC =", round(auc_value, 2)))
-
-# Imprimir AUC
-cat("AUC: ", auc_value, "\n")
+# #Hosmer-Lemeshow test
+# library(ResourceSelection)
+# hoslem.test(y, yhat, g = 5)
+# 
+# #Matriz de confusión-----------------
+# # Predicciones probabilísticas
+# yhat <- fitted(mod2_c)
+# 
+# # Convertir las probabilidades a predicciones binarias (0 o 1)
+# pred_binaria <- ifelse(yhat > .4, 1, 0)
+# 
+# # Verdaderos valores
+# y <- model.response(model.frame(mod2_c))
+# 
+# # Matriz de confusión
+# library(caret)
+# conf_matrix <- confusionMatrix(as.factor(pred_binaria), as.factor(y),positive = "1")
+# print(conf_matrix)
+# 
+# 
+# # Métricas individuales de la matriz de confusión
+# accuracy <- conf_matrix$overall['Accuracy']
+# sensitivity <- conf_matrix$byClass['Sensitivity']
+# specificity <- conf_matrix$byClass['Specificity']
+# precision <- conf_matrix$byClass['Precision']
+# f1_score <- conf_matrix$byClass['F1']
+# 
+# # Imprimir las métricas
+# cat("Accuracy: ", accuracy, "\n")
+# cat("Sensitivity: ", sensitivity, "\n")
+# cat("Specificity: ", specificity, "\n")
+# cat("Precision: ", precision, "\n")
+# cat("F1 Score: ", f1_score, "\n")
+# 
+# # Curva ROC y AUC
+# library(pROC)
+# 
+# # Calcular AUC
+# roc_curve <- roc(y, yhat)
+# auc_value <- auc(roc_curve)
+# 
+# # Graficar la curva ROC
+# plot(roc_curve, main = paste("AUC =", round(auc_value, 2)))
+# 
+# # Imprimir AUC
+# cat("AUC: ", auc_value, "\n")
 
 ```
 
