@@ -36,7 +36,7 @@ latinobarometro <- latinobarometro %>%
   mutate(anio_pais = interaction(iso3, anio))
 
 latinobarometro_sel <- latinobarometro %>% 
-  filter(anio %in% c(2011, 2013, 2015, 2017, 2018, 2020, 2023), !iso3 %in% c("ESP", "VEN", "NIC"))
+  filter(anio %in% c(2011, 2013, 2015, 2017, 2018, 2020, 2023, 2024), !iso3 %in% c("ESP", "VEN", "NIC"))
 
 rm(latinobarometro, datos_paises)
 ```
@@ -163,6 +163,20 @@ ggcloud_variables(mca2023, vlab = T, shapes = T, shapesize = 1.5, force = 2,
                   textsize = 2.3) + 
   labs(title = "MCA 2023")
 
+#2024
+var_obj_2024 <- latinobarometro_sel %>%
+  filter(anio == 2024) %>%
+  select(trabajo_f, nivel_ed, bienes_lava, bienes_celular, bienes_auto, bienes_cloaca, bienes_aguapot,
+         bienes_aguacal, bienes_casa, wt)
+
+mca2024 <- speMCA(var_obj_2024[,1:9], ncp = 2, row.w = var_obj_2024$wt)
+
+modif.rate(mca2024)$modif
+
+ggcloud_variables(mca2024, vlab = T, shapes = T, shapesize = 1.5, force = 2,
+                  textsize = 2.3) + 
+  labs(title = "MCA 2024")
+
 
 #Construcción de índice (estandarizado)
 estandarizar_ponderado <- function(x, w) {
@@ -179,7 +193,8 @@ coords <- bind_rows(
   data.frame(anio = 2017, dim1 = mca2017$ind$coord[, 1]),
   data.frame(anio = 2018, dim1 = mca2018$ind$coord[, 1]),
   data.frame(anio = 2020, dim1 = mca2020$ind$coord[, 1]),
-  data.frame(anio = 2023, dim1 = mca2023$ind$coord[, 1])
+  data.frame(anio = 2023, dim1 = mca2023$ind$coord[, 1]),
+  data.frame(anio = 2024, dim1 = mca2024$ind$coord[, 1])
 )
 
 # Filtrar y unir con coordenadas
@@ -202,14 +217,14 @@ latinobarometro_sel %>%
                   width = 20,
                   lineheight = 2) +
   labs(title = "Índice de estratificación",
-       subtitle = "Países de América Latina. 2011-2023",
+       subtitle = "Países de América Latina. 2011-2024",
        caption = "Fuente: elaboración propia en base a Latinobarómetro") +
   theme(axis.title.x = element_blank(),
         axis.title.y = element_blank(),
         axis.text.y = element_text(size = 11))
 
-rm(coords, var_obj_2011, var_obj_2013, var_obj_2015, var_obj_2017, var_obj_2018, var_obj_2020, var_obj_2023,
-   mca2011, mca2013, mca2015, mca2017, mca2018, mca2020, mca2023)
+rm(coords, var_obj_2011, var_obj_2013, var_obj_2015, var_obj_2017, var_obj_2018, var_obj_2020, var_obj_2023, var_obj_2024,
+   mca2011, mca2013, mca2015, mca2017, mca2018, mca2020, mca2023, mca2024)
 
 ```
 
@@ -221,6 +236,7 @@ latinobarometro_sel <- latinobarometro_sel %>%
   group_by(anio_pais) %>% 
   mutate(edad_cw = scale(edad, center = T, scale = T),
          estatus_obj = scale(dim1_std, center = T),
+         estatus_01 = scales::rescale(dim1_std, to = c(0, 1)),
          ideologia_cw = scale(ideologia, center = T, scale = T)) %>% 
   ungroup() %>% 
   mutate(
@@ -250,7 +266,7 @@ latinobarometro_sel %>%
   geom_col(stat = "identity", position = "fill") +
   labs(
     title = "Distribución de la población según clase subjetiva",
-    subtitle = "Países seleccionados de América Latina. 2011-2023",
+    subtitle = "Países seleccionados de América Latina. 2011-2024",
     fill = "Clase subjetiva"
   ) +
   scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
@@ -262,6 +278,8 @@ latinobarometro_sel %>%
     legend.position = "bottom"
   ) +
   facet_wrap(~pais_f, ncol = 4)
+
+ggsave("graficos/clase_subjetiva/dist_clase_sub.png", width = 8, height = 5, dpi = 300)
 
 prom_clase_media <- latinobarometro_sel %>% 
   filter(!is.na(clase_media)) %>%
@@ -283,7 +301,7 @@ latinobarometro_sel %>%
   geom_hline(yintercept = prom_clase_media$promedio, linetype = "dashed", color = "red") +
   labs(
     title = "Porcentaje de personas que se consideran clase media, media alta y alta",
-    subtitle = "Países seleccionados de América Latina. 2011-2023",
+    subtitle = "Países seleccionados de América Latina. 2011-2024",
     caption = "Fuente: elaboración propia en base a Latinobarómetro"
   ) +
   scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
@@ -294,7 +312,147 @@ latinobarometro_sel %>%
     axis.text.y = element_text(size = 8)
   ) +
   facet_wrap(~pais_f, ncol = 4)
+
+ggsave("graficos/clase_subjetiva/dist_clase_media.png", width = 8, height = 5, dpi = 300)
+
+
 ```
+
+```{r pirámides}
+latinobarometro_sel %>% 
+  filter(!is.na(clase_subjetiva4), anio == 2024) %>% 
+  group_by(pais_f, clase_subjetiva4) %>% 
+  tally(wt) %>% 
+  mutate(porcentaje = n / sum(n) * 100,
+         porcentaje_neg = -porcentaje) %>% 
+  ggplot() +
+  geom_bar(aes(x= fct_rev(clase_subjetiva4), y=porcentaje), stat="identity", fill = "steelblue") +
+  geom_bar(aes(x= fct_rev(clase_subjetiva4), y=porcentaje_neg), stat="identity", fill = "steelblue") +
+  coord_flip() +
+  scale_y_continuous(labels = function(x) paste0(abs(x), "%")) +
+  labs(
+    title = "Distribución de la población según clase subjetiva",
+    subtitle = "Países seleccionados de América Latina. 2024"
+  ) +
+  theme(
+    axis.title.x = element_blank(),
+    axis.title.y = element_blank(),
+    axis.text.x = element_text(size = 7)
+  ) +
+  facet_wrap(~pais_f, ncol = 4)
+
+ggsave("graficos/clase_subjetiva/piramides_sub.png", width = 8, height = 5, dpi = 300)
+
+
+latinobarometro_sel %>%
+  filter(!is.na(clase_subjetiva4), anio == 2024) %>%
+  ggplot(aes(x = 1, y = estatus_01, weight = wt)) +   # x = constante para un solo violín
+  geom_violin(fill = "skyblue", alpha = 0.6) +
+  labs(
+    title = "Distribución de la población según estatus objetivo (0-1)",
+    subtitle = "Países seleccionados de América Latina. 2024"
+  ) +
+  theme(
+    axis.title.x = element_blank(),
+    axis.title.y = element_blank(),
+    axis.text.y = element_text(size = 7),
+    axis.text.x = element_text(size = 7)
+  ) +
+  facet_wrap(~ pais_f)
+
+ggsave("graficos/clase_subjetiva/piramides_obj.png", width = 8, height = 5, dpi = 300)
+
+```
+
+```{r Datos contextuales y clase subjetiva}
+latinobarometro_sel2 <- latinobarometro_sel %>% 
+  filter(anio < 2024)
+
+# PBI
+latinobarometro_sel2 %>% 
+  filter(!is.na(clase_subjetiva4)) %>%
+  group_by(anio_pais, pib_ppa, clase_media) %>% 
+  tally(wt) %>% 
+  mutate(porcentaje = n / sum(n)) %>% 
+  filter(clase_media == 1) %>%
+  ggplot(aes(x = pib_ppa, y = porcentaje)) +
+  geom_point() +
+  geom_smooth(method = "lm", color = "steelblue") +
+  ggrepel::geom_text_repel(aes(label = anio_pais), size = 1.5) +
+  labs(
+    title = "PIB per cápita y % de población idetificada con la clase media",
+    subtitle = "Países seleccionados de América Latina. 2011-2023",
+    x = "PBI per cápita (PPP)") +
+  scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
+  scale_x_continuous(breaks = scales::pretty_breaks(n = 8))
+
+ggsave("graficos/clase_subjetiva/pib_clase_media.png", width = 8, height = 5, dpi = 300)
+
+# Gini
+latinobarometro_sel2 %>%
+  filter(!is.na(clase_subjetiva4)) %>%
+  group_by(anio_pais, gini, clase_media) %>% 
+  tally(wt) %>% 
+  mutate(porcentaje = n / sum(n)) %>% 
+  filter(clase_media == 1) %>%
+  ggplot(aes(x = gini, y = porcentaje)) +
+  geom_point() +
+  geom_smooth(method = "lm", color = "steelblue") +
+  ggrepel::geom_text_repel(aes(label = anio_pais), size = 1.5) +
+  labs(
+    title = "Índice de Gini y % de población idetificada con la clase media",
+    subtitle = "Países seleccionados de América Latina. 2011-2023",
+    x = "Índice de Gini") +
+  scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
+  scale_x_continuous(breaks = scales::pretty_breaks(n = 8))
+
+ggsave("graficos/clase_subjetiva/gini_clase_media.png", width = 8, height = 5, dpi = 300)
+
+# Ocupaciones medias
+latinobarometro_sel2 %>%
+  filter(!is.na(clase_subjetiva4)) %>%
+  group_by(anio_pais, ocupaciones_medias, clase_media) %>%
+  tally(wt) %>%
+  mutate(porcentaje = n / sum(n)) %>%
+  filter(clase_media == 1) %>%
+  ggplot(aes(x = ocupaciones_medias, y = porcentaje)) +
+  geom_point() +
+  geom_smooth(method = "lm", color = "steelblue") +
+  ggrepel::geom_text_repel(aes(label = anio_pais), size = 1.5) +
+  labs(
+    title = "% de ocupaciones medias y % de población idetificada con la clase media",
+    subtitle = "Países seleccionados de América Latina. 2011-2023",
+    x = "% de ocupaciones medias") +
+  scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
+  scale_x_continuous(breaks = scales::pretty_breaks(n = 8),
+                     labels = function(x) paste0(x, "%"))
+  
+
+ggsave("graficos/clase_subjetiva/ocupaciones_clase_media.png", width = 8, height = 5, dpi = 300)
+
+# Informalidad
+latinobarometro_sel2 %>%
+  filter(!is.na(clase_subjetiva4)) %>%
+  group_by(anio_pais, informalidad, clase_media) %>%
+  tally(wt) %>%
+  mutate(porcentaje = n / sum(n)) %>%
+  filter(clase_media == 1) %>%
+  ggplot(aes(x = informalidad, y = porcentaje)) +
+  geom_point() +
+  geom_smooth(method = "lm", color = "steelblue") +
+  ggrepel::geom_text_repel(aes(label = anio_pais), size = 1.5) +
+  labs(
+    title = "Tasa de informalidad y % de población inetificada con la clase media",
+    subtitle = "Países seleccionados de América Latina. 2011-2023",
+    x = "Tasa de informalidad") +
+  scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
+  scale_x_continuous(breaks = scales::pretty_breaks(n = 8),
+                     labels = function(x) paste0(x, "%"))
+
+ggsave("graficos/clase_subjetiva/informalidad_clase_media.png", width = 8, height = 5, dpi = 300)
+
+```
+
 
 
 # Modelos multinivel
