@@ -17,10 +17,19 @@ cache: true
 ```{r Carga librerías y bases}
 rm(list = ls())
 
-pacman::p_load(tidyverse, Hmisc, gtsummary, GDAtools, jtools, huxtable, survey, ggoxford, ggtext, lme4, performance, sjPlot)
+pacman::p_load(tidyverse, Hmisc, gtsummary, GDAtools, jtools, huxtable, survey, ggoxford, ggtext, lme4, performance, sjPlot, ggsci)
+
+theme_set(theme_light())
 
 load("bases/latinobarometro_select.RData")
 load("bases/base_datos_agregados.RData")
+
+#id único
+latinobarometro <- latinobarometro %>%
+  group_by(pais, anio) %>%
+  mutate(id_fila = paste0(pais, anio, row_number())) %>%
+  ungroup()
+
 
 #Banderas
 latinobarometro <- latinobarometro  %>%  
@@ -57,12 +66,14 @@ latinobarometro_sel <- latinobarometro_sel %>%
 #2011
 var_obj_2011 <- latinobarometro_sel %>%
   filter(anio == 2011) %>%
-  select(trabajo_f, nivel_ed, bienes_comp, bienes_lava, bienes_telef, bienes_celular, bienes_auto, bienes_cloaca, bienes_aguapot,
-         bienes_aguacal, bienes_casa, wt)
+  select(trabajo_f, nivel_ed, bienes_lava, bienes_celular, bienes_auto, bienes_cloaca,
+         bienes_aguacal, bienes_casa, wt, id_fila)
 
-mca2011 <- speMCA(var_obj_2011[,1:11], ncp = 2, row.w = var_obj_2011$wt)
+mca2011 <- speMCA(var_obj_2011[,1:8], ncp = 2, row.w = var_obj_2011$wt)
 
 modif.rate(mca2011)$modif
+
+mca2011 <- flip.mca(mca2011, dim = 1)
 
 ggcloud_variables(mca2011, vlab = T, shapes = T, shapesize = 1.5, force = 2,
                   textsize = 2.3, ) + 
@@ -71,10 +82,10 @@ ggcloud_variables(mca2011, vlab = T, shapes = T, shapesize = 1.5, force = 2,
 #2013
 var_obj_2013 <- latinobarometro_sel %>%
   filter(anio == 2013) %>%
-  select(trabajo_f, nivel_ed, bienes_comp, bienes_lava, bienes_telef, bienes_celular, bienes_auto, bienes_cloaca, bienes_aguapot,
-         bienes_aguacal, bienes_casa, wt)
+  select(trabajo_f, nivel_ed, bienes_lava, bienes_celular, bienes_auto, bienes_cloaca,
+         bienes_aguacal, bienes_casa, wt, id_fila)
 
-mca2013 <- speMCA(var_obj_2013[,1:11], ncp = 2, row.w = var_obj_2013$wt)
+mca2013 <- speMCA(var_obj_2013[,1:8], ncp = 2, row.w = var_obj_2013$wt)
 
 modif.rate(mca2013)$modif
 
@@ -87,10 +98,10 @@ ggcloud_variables(mca2013, vlab = T, shapes = T, shapesize = 1.5, force = 2,
 #2015
 var_obj_2015 <- latinobarometro_sel %>%
   filter(anio == 2015) %>%
-  select(trabajo_f, nivel_ed, bienes_comp, bienes_lava, bienes_telef, bienes_celular, bienes_auto, bienes_cloaca,
-         bienes_aguacal, bienes_casa, wt)
+  select(trabajo_f, nivel_ed, bienes_lava, bienes_celular, bienes_auto, bienes_cloaca,
+         bienes_aguacal, bienes_casa, wt, id_fila)
 
-mca2015 <- speMCA(var_obj_2015[,1:10], ncp = 2, row.w = var_obj_2015$wt)
+mca2015 <- speMCA(var_obj_2015[,1:8], ncp = 2, row.w = var_obj_2015$wt)
 
 modif.rate(mca2015)$modif
 
@@ -103,10 +114,10 @@ ggcloud_variables(mca2015, vlab = T, shapes = T, shapesize = 1.5, force = 2,
 #2017
 var_obj_2017 <- latinobarometro_sel %>%
   filter(anio == 2017) %>%
-  select(trabajo_f, nivel_ed, bienes_comp, bienes_lava, bienes_telef, bienes_celular, bienes_auto, bienes_cloaca, bienes_aguapot,
-         bienes_aguacal, bienes_casa, wt)
+  select(trabajo_f, nivel_ed, bienes_lava, bienes_celular, bienes_auto, bienes_cloaca,
+         bienes_aguacal, bienes_casa, wt, id_fila)
 
-mca2017 <- speMCA(var_obj_2017[,1:11], ncp = 2, row.w = var_obj_2017$wt)
+mca2017 <- speMCA(var_obj_2017[,1:8], ncp = 2, row.w = var_obj_2017$wt)
 
 modif.rate(mca2017)$modif
 
@@ -119,10 +130,10 @@ ggcloud_variables(mca2017, vlab = T, shapes = T, shapesize = 1.5, force = 2,
 #2018
 var_obj_2018 <- latinobarometro_sel %>%
   filter(anio == 2018) %>%
-  select(trabajo_f, nivel_ed, bienes_comp, bienes_lava, bienes_telef, bienes_celular, bienes_auto, bienes_cloaca, bienes_aguapot,
-         bienes_aguacal, bienes_casa, wt)
+  select(trabajo_f, nivel_ed, bienes_lava, bienes_celular, bienes_auto, bienes_cloaca,
+         bienes_aguacal, bienes_casa, wt, id_fila)
 
-mca2018 <- speMCA(var_obj_2018[,1:11], ncp = 2, row.w = var_obj_2018$wt)
+mca2018 <- speMCA(var_obj_2018[,1:8], ncp = 2, row.w = var_obj_2018$wt)
 
 modif.rate(mca2018)$modif
 
@@ -136,10 +147,10 @@ ggcloud_variables(mca2018, vlab = T, shapes = T, shapesize = 1.5, force = 2,
 #2020
 var_obj_2020 <- latinobarometro_sel %>%
   filter(anio == 2020) %>%
-  select(trabajo_f, nivel_ed, bienes_comp, bienes_lava, bienes_telef, bienes_celular, bienes_auto, bienes_cloaca, bienes_aguapot,
-         bienes_aguacal, bienes_casa, wt)
+  select(trabajo_f, nivel_ed, bienes_lava, bienes_celular, bienes_auto, bienes_cloaca,
+         bienes_aguacal, bienes_casa, wt, id_fila)
 
-mca2020 <- speMCA(var_obj_2020[,1:11], ncp = 2, row.w = var_obj_2020$wt)
+mca2020 <- speMCA(var_obj_2020[,1:8], ncp = 2, row.w = var_obj_2020$wt)
 
 modif.rate(mca2020)$modif
 
@@ -152,12 +163,14 @@ ggcloud_variables(mca2020, vlab = T, shapes = T, shapesize = 1.5, force = 2,
 #2023
 var_obj_2023 <- latinobarometro_sel %>%
   filter(anio == 2023) %>%
-  select(trabajo_f, nivel_ed, bienes_lava, bienes_celular, bienes_auto, bienes_cloaca, bienes_aguapot,
-         bienes_aguacal, bienes_casa, wt)
+  select(trabajo_f, nivel_ed, bienes_lava, bienes_celular, bienes_auto, bienes_cloaca,
+         bienes_aguacal, bienes_casa, wt, id_fila)
 
-mca2023 <- speMCA(var_obj_2023[,1:9], ncp = 2, row.w = var_obj_2023$wt)
+mca2023 <- speMCA(var_obj_2023[,1:8], ncp = 2, row.w = var_obj_2023$wt)
 
 modif.rate(mca2023)$modif
+
+mca2023 <- flip.mca(mca2023, dim = 1)
 
 ggcloud_variables(mca2023, vlab = T, shapes = T, shapesize = 1.5, force = 2,
                   textsize = 2.3) + 
@@ -166,19 +179,33 @@ ggcloud_variables(mca2023, vlab = T, shapes = T, shapesize = 1.5, force = 2,
 #2024
 var_obj_2024 <- latinobarometro_sel %>%
   filter(anio == 2024) %>%
-  select(trabajo_f, nivel_ed, bienes_lava, bienes_celular, bienes_auto, bienes_cloaca, bienes_aguapot,
-         bienes_aguacal, bienes_casa, wt)
+  select(trabajo_f, nivel_ed, bienes_lava, bienes_celular, bienes_auto, bienes_cloaca,
+         bienes_aguacal, bienes_casa, wt, id_fila)
 
-mca2024 <- speMCA(var_obj_2024[,1:9], ncp = 2, row.w = var_obj_2024$wt)
+mca2024 <- speMCA(var_obj_2024[,1:8], ncp = 2, row.w = var_obj_2024$wt)
 
 modif.rate(mca2024)$modif
+
+mca2024 <- flip.mca(mca2024, dim = 1)
 
 ggcloud_variables(mca2024, vlab = T, shapes = T, shapesize = 1.5, force = 2,
                   textsize = 2.3) + 
   labs(title = "MCA 2024")
 
 
-#Construcción de índice (estandarizado)
+
+#Pego los puntajes factoriales
+coords <- bind_rows(
+  data.frame(anio = 2011, id_fila = var_obj_2011$id_fila, dim1 = mca2011$ind$coord[, 1]),
+  data.frame(anio = 2013, id_fila = var_obj_2013$id_fila, dim1 = mca2013$ind$coord[, 1]),
+  data.frame(anio = 2015, id_fila = var_obj_2015$id_fila, dim1 = mca2015$ind$coord[, 1]),
+  data.frame(anio = 2017, id_fila = var_obj_2017$id_fila, dim1 = mca2017$ind$coord[, 1]),
+  data.frame(anio = 2018, id_fila = var_obj_2018$id_fila, dim1 = mca2018$ind$coord[, 1]),
+  data.frame(anio = 2020, id_fila = var_obj_2020$id_fila, dim1 = mca2020$ind$coord[, 1]),
+  data.frame(anio = 2023, id_fila = var_obj_2023$id_fila, dim1 = mca2023$ind$coord[, 1]),
+  data.frame(anio = 2024, id_fila = var_obj_2024$id_fila, dim1 = mca2024$ind$coord[, 1])
+)
+
 estandarizar_ponderado <- function(x, w) {
   media_ponderada <- sum(x * w) / sum(w)
   var_ponderada <- sum(w * (x - media_ponderada)^2) / sum(w)
@@ -186,22 +213,11 @@ estandarizar_ponderado <- function(x, w) {
   return((x - media_ponderada) / desv_ponderada)
 }
 
-coords <- bind_rows(
-  data.frame(anio = 2011, dim1 = mca2011$ind$coord[, 1]),
-  data.frame(anio = 2013, dim1 = mca2013$ind$coord[, 1]),
-  data.frame(anio = 2015, dim1 = mca2015$ind$coord[, 1]),
-  data.frame(anio = 2017, dim1 = mca2017$ind$coord[, 1]),
-  data.frame(anio = 2018, dim1 = mca2018$ind$coord[, 1]),
-  data.frame(anio = 2020, dim1 = mca2020$ind$coord[, 1]),
-  data.frame(anio = 2023, dim1 = mca2023$ind$coord[, 1]),
-  data.frame(anio = 2024, dim1 = mca2024$ind$coord[, 1])
-)
-
-# Filtrar y unir con coordenadas
 latinobarometro_sel <- latinobarometro_sel %>%
-  bind_cols(dim1 = coords$dim1) %>%
+  left_join(coords, by = c("anio", "id_fila")) %>% 
   mutate(dim1_std = estandarizar_ponderado(dim1, wt),
          dim1_01= scales::rescale(dim1, to = c(0, 1)))
+
 
 latinobarometro_sel %>% 
   group_by(iso3) %>%
@@ -219,9 +235,10 @@ latinobarometro_sel %>%
   labs(title = "Índice de estratificación",
        subtitle = "Países de América Latina. 2011-2024",
        caption = "Fuente: elaboración propia en base a Latinobarómetro") +
+  scale_y_continuous(breaks = scales::pretty_breaks(n = 8)) +
   theme(axis.title.x = element_blank(),
         axis.title.y = element_blank(),
-        axis.text.y = element_text(size = 11))
+        axis.text.y = element_text(size = 10)) 
 
 rm(coords, var_obj_2011, var_obj_2013, var_obj_2015, var_obj_2017, var_obj_2018, var_obj_2020, var_obj_2023, var_obj_2024,
    mca2011, mca2013, mca2015, mca2017, mca2018, mca2020, mca2023, mca2024)
@@ -245,12 +262,15 @@ latinobarometro_sel <- latinobarometro_sel %>%
                                    TRUE ~ 0)),
     clase_media2 = factor(case_when(clase_subjetiva_f %in% c("Alta", "Media alta") ~ 1,
                                    TRUE ~ 0)),
+    clase_media3 = factor(case_when(clase_subjetiva_f %in% c("Media") ~ 1,
+                                   TRUE ~ 0)),
     pib_ppa_cgm = scale(pib_ppa,center = T, scale = T),
     gini_cgm = scale(gini, center = T, scale = T),
     informalidad_cgm = scale(informalidad, center = T, scale = T),
     ocupaciones_medias_cgm = scale(ocupaciones_medias, center = T, scale = T),
     empleo_cgm = scale(emp_publico, center = T, scale = T),
-    palma_cgm = scale(palma, center = T, scale = T))
+    palma_cgm = scale(palma, center = T, scale = T),
+    pib_log = log10(pib_ppa))
 
 ```
 
@@ -263,19 +283,21 @@ latinobarometro_sel %>%
   tally(wt) %>% 
   mutate(porcentaje = n / sum(n)) %>% 
   ggplot(aes(x = as.character(anio), y = porcentaje, fill = clase_subjetiva4)) +
-  geom_col(stat = "identity", position = "fill") +
+  geom_col(position = "fill") +
   labs(
     title = "Distribución de la población según clase subjetiva",
     subtitle = "Países seleccionados de América Latina. 2011-2024",
     fill = "Clase subjetiva"
   ) +
+  scale_fill_locuszoom() +
   scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
   theme(
     axis.title.x = element_blank(),
     axis.title.y = element_blank(),
     axis.text.x = element_text(angle = 45, hjust = 1, size = 7),
     axis.text.y = element_text(size = 8), 
-    legend.position = "bottom"
+    legend.position = "bottom",
+    strip.text = element_text(color = "black")
   ) +
   facet_wrap(~pais_f, ncol = 4)
 
@@ -297,7 +319,7 @@ latinobarometro_sel %>%
   mutate(porcentaje = n / sum(n)) %>% 
   filter(clase_media == 1) %>% 
   ggplot(aes(x = as.character(anio), y = porcentaje)) +
-  geom_col(stat = "identity", fill = "steelblue") +
+  geom_col(fill = "steelblue") +
   geom_hline(yintercept = prom_clase_media$promedio, linetype = "dashed", color = "red") +
   labs(
     title = "Porcentaje de personas que se consideran clase media, media alta y alta",
@@ -309,13 +331,66 @@ latinobarometro_sel %>%
     axis.title.x = element_blank(),
     axis.title.y = element_blank(),
     axis.text.x = element_text(angle = 45, hjust = 1, size = 7),
-    axis.text.y = element_text(size = 8)
+    axis.text.y = element_text(size = 8),
+    strip.text = element_text(color = "black")
   ) +
   facet_wrap(~pais_f, ncol = 4)
 
 ggsave("graficos/clase_subjetiva/dist_clase_media.png", width = 8, height = 5, dpi = 300)
 
 
+
+# Porcentaje de clase media por país y año
+por_pais <- latinobarometro_sel %>%
+  filter(!is.na(clase_media)) %>%
+  group_by(anio, pais_f, clase_media) %>%
+  tally(wt = wt) %>%
+  mutate(porcentaje = n / sum(n)) %>%
+  filter(clase_media == 1) %>%
+  ungroup()
+
+# Porcentaje de clase media total por año (todos los países)
+datos_clasemedia <- latinobarometro_sel %>%
+  filter(!is.na(clase_media)) %>%
+  group_by(anio, clase_media) %>%
+  tally(wt = wt) %>%
+  mutate(porcentaje_clasemedia = n / sum(n)) %>%
+  filter(clase_media == 1) %>%
+  ungroup()
+
+# Gráfico con puntos por país y línea de tendencia por año
+ggplot() +
+  # Puntos por país
+  geom_point(data = por_pais,
+             aes(x = as.character(anio), y = porcentaje, color = "Clase media por país y año"),
+             alpha = 0.7) +
+  # Línea de promedio general
+  geom_line(data = datos_clasemedia,
+            aes(x = as.character(anio), y = porcentaje_clasemedia, color = "Clase media promedio general", group = 1),
+            size = .7) +
+  facet_wrap(~pais_f, ncol = 4) +
+  scale_color_locuszoom() +
+  labs(
+    title = "Porcentaje de personas que se consideran clase media, media-alta y alta",
+    subtitle = "Países seleccionados de América Latina. 2011-2024",
+    caption = "Fuente: elaboración propia en base a Latinobarómetro"
+  ) +
+  scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 7),
+    axis.text.y = element_text(size = 8),
+    strip.text = element_text(color = "black"),
+    axis.title.x = element_blank(),
+    axis.title.y = element_blank(),
+    legend.position = "bottom"
+  )
+
+
+ggsave("graficos/clase_subjetiva/dist_clase_media_puntos.png", width = 8, height = 5, dpi = 300)
+  
+  
+  
+  
 ```
 
 ```{r pirámides}
@@ -326,18 +401,20 @@ latinobarometro_sel %>%
   mutate(porcentaje = n / sum(n) * 100,
          porcentaje_neg = -porcentaje) %>% 
   ggplot() +
-  geom_bar(aes(x= fct_rev(clase_subjetiva4), y=porcentaje), stat="identity", fill = "steelblue") +
-  geom_bar(aes(x= fct_rev(clase_subjetiva4), y=porcentaje_neg), stat="identity", fill = "steelblue") +
+  geom_bar(aes(x= fct_rev(clase_subjetiva4), y=porcentaje), stat="identity", fill = "skyblue", alpha = 0.8) +
+  geom_bar(aes(x= fct_rev(clase_subjetiva4), y=porcentaje_neg), stat="identity", fill = "skyblue", alpha = 0.8) +
   coord_flip() +
   scale_y_continuous(labels = function(x) paste0(abs(x), "%")) +
   labs(
     title = "Distribución de la población según clase subjetiva",
-    subtitle = "Países seleccionados de América Latina. 2024"
+    subtitle = "Países seleccionados de América Latina. 2024",
+    caption = "Fuente: elaboración propia en base a Latinobarómetro"
   ) +
   theme(
     axis.title.x = element_blank(),
     axis.title.y = element_blank(),
-    axis.text.x = element_text(size = 7)
+    axis.text.x = element_text(size = 7),
+    strip.text = element_text(color = "black")
   ) +
   facet_wrap(~pais_f, ncol = 4)
 
@@ -347,10 +424,11 @@ ggsave("graficos/clase_subjetiva/piramides_sub.png", width = 8, height = 5, dpi 
 latinobarometro_sel %>%
   filter(!is.na(clase_subjetiva4), anio == 2024) %>%
   ggplot(aes(x = 1, y = estatus_01, weight = wt)) +   # x = constante para un solo violín
-  geom_violin(fill = "skyblue", alpha = 0.6) +
+  geom_violin(fill = "skyblue", alpha = 0.8) +
   labs(
     title = "Distribución de la población según estatus objetivo (0-1)",
-    subtitle = "Países seleccionados de América Latina. 2024"
+    subtitle = "Países seleccionados de América Latina. 2024",
+    caption = "Fuente: elaboración propia en base a Latinobarómetro"
   ) +
   theme(
     axis.title.x = element_blank(),
@@ -377,14 +455,24 @@ latinobarometro_sel2 %>%
   filter(clase_media == 1) %>%
   ggplot(aes(x = pib_ppa, y = porcentaje)) +
   geom_point() +
-  geom_smooth(method = "lm", color = "steelblue") +
+  geom_smooth(
+    method = "loess",
+    se = T,
+    color = "skyblue",
+    linewidth = 1,
+    aes(linetype = "Loess")
+  ) +
   ggrepel::geom_text_repel(aes(label = anio_pais), size = 1.5) +
   labs(
-    title = "PIB per cápita y % de población idetificada con la clase media",
-    subtitle = "Países seleccionados de América Latina. 2011-2023",
+    title = "PIB per cápita y % de población identificada con la clase media",
+    subtitle = "Países seleccionados de América Latina. 2011-2023. Curva LOESS ajustada",
     x = "PBI per cápita (PPP)") +
   scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
-  scale_x_continuous(breaks = scales::pretty_breaks(n = 8))
+  scale_x_continuous(breaks = scales::pretty_breaks(n = 8)) +
+  theme(
+    axis.title.y = element_blank(),
+    legend.position = "none"
+  )
 
 ggsave("graficos/clase_subjetiva/pib_clase_media.png", width = 8, height = 5, dpi = 300)
 
@@ -397,14 +485,24 @@ latinobarometro_sel2 %>%
   filter(clase_media == 1) %>%
   ggplot(aes(x = gini, y = porcentaje)) +
   geom_point() +
-  geom_smooth(method = "lm", color = "steelblue") +
+  geom_smooth(
+    method = "loess",
+    se = T,
+    color = "skyblue",
+    linewidth = 1,
+    aes(linetype = "Loess")
+  ) +
   ggrepel::geom_text_repel(aes(label = anio_pais), size = 1.5) +
   labs(
-    title = "Índice de Gini y % de población idetificada con la clase media",
-    subtitle = "Países seleccionados de América Latina. 2011-2023",
+    title = "Índice de Gini y % de población identificada con la clase media",
+    subtitle = "Países seleccionados de América Latina. 2011-2023. Curva LOESS ajustada",
     x = "Índice de Gini") +
   scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
-  scale_x_continuous(breaks = scales::pretty_breaks(n = 8))
+  scale_x_continuous(breaks = scales::pretty_breaks(n = 8)) +
+  theme(
+    axis.title.y = element_blank(),
+    legend.position = "none"
+  )
 
 ggsave("graficos/clase_subjetiva/gini_clase_media.png", width = 8, height = 5, dpi = 300)
 
@@ -417,15 +515,25 @@ latinobarometro_sel2 %>%
   filter(clase_media == 1) %>%
   ggplot(aes(x = ocupaciones_medias, y = porcentaje)) +
   geom_point() +
-  geom_smooth(method = "lm", color = "steelblue") +
+  geom_smooth(
+    method = "loess",
+    se = T,
+    color = "skyblue",
+    linewidth = 1,
+    aes(linetype = "Loess")
+  ) +
   ggrepel::geom_text_repel(aes(label = anio_pais), size = 1.5) +
   labs(
-    title = "% de ocupaciones medias y % de población idetificada con la clase media",
-    subtitle = "Países seleccionados de América Latina. 2011-2023",
+    title = "% de ocupaciones medias y % de población identificada con la clase media",
+    subtitle = "Países seleccionados de América Latina. 2011-2023. Curva LOESS ajustada",
     x = "% de ocupaciones medias") +
   scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
   scale_x_continuous(breaks = scales::pretty_breaks(n = 8),
-                     labels = function(x) paste0(x, "%"))
+                     labels = function(x) paste0(x, "%")) +
+  theme(
+    axis.title.y = element_blank(),
+    legend.position = "none"
+  )
   
 
 ggsave("graficos/clase_subjetiva/ocupaciones_clase_media.png", width = 8, height = 5, dpi = 300)
@@ -439,15 +547,25 @@ latinobarometro_sel2 %>%
   filter(clase_media == 1) %>%
   ggplot(aes(x = informalidad, y = porcentaje)) +
   geom_point() +
-  geom_smooth(method = "lm", color = "steelblue") +
+  geom_smooth(
+    method = "loess",
+    se = T,
+    color = "skyblue",
+    linewidth = 1,
+    aes(linetype = "Loess")
+  ) +
   ggrepel::geom_text_repel(aes(label = anio_pais), size = 1.5) +
   labs(
-    title = "Tasa de informalidad y % de población inetificada con la clase media",
-    subtitle = "Países seleccionados de América Latina. 2011-2023",
+    title = "Tasa de informalidad y % de población identificada con la clase media",
+    subtitle = "Países seleccionados de América Latina. 2011-2023. Curva LOESS ajustada",
     x = "Tasa de informalidad") +
   scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
   scale_x_continuous(breaks = scales::pretty_breaks(n = 8),
-                     labels = function(x) paste0(x, "%"))
+                     labels = function(x) paste0(x, "%")) +
+  theme(
+    axis.title.y = element_blank(),
+    legend.position = "none"
+  )
 
 ggsave("graficos/clase_subjetiva/informalidad_clase_media.png", width = 8, height = 5, dpi = 300)
 
@@ -458,9 +576,10 @@ ggsave("graficos/clase_subjetiva/informalidad_clase_media.png", width = 8, heigh
 # Modelos multinivel
 
 ```{r Modelos multinivel}
+latinobarometro_sel2$anio <- as.factor(latinobarometro_sel2$anio)
 
 #Modelo nulo--------
-mod1 <- glmer(clase_media ~ 1 + (1 | pais_f) + (1 | anio_pais), data = latinobarometro_sel, family = binomial(link = "logit"), weights = wt)
+mod1 <- glmer(clase_media ~ 1 + (1 | pais_f/anio), data = latinobarometro_sel2, family = binomial(link = "logit"), weights = wt)
 
 #ICC general
 print(icc(mod1))
@@ -468,7 +587,7 @@ print(icc(mod1))
 # Extraer varianzas
 vc <- as.data.frame(VarCorr(mod1))
 var_pais <- vc[vc$grp == "pais_f", "vcov"]
-var_anio_pais <- vc[vc$grp == "anio_pais", "vcov"]
+var_anio_pais <- vc[vc$grp == "anio:pais_f", "vcov"]
 
 # Varianza residual logística
 var_resid <- (pi^2) / 3
@@ -478,29 +597,29 @@ icc_pais <- var_pais / (var_pais + var_anio_pais + var_resid)
 icc_anio_pais <- var_anio_pais / (var_pais + var_anio_pais + var_resid)
 
 data.frame(
-  Nivel = c("País", "Año-País"),
+  Nivel = c("País", "Año dentro de país"),
   ICC = c(icc_pais, icc_anio_pais)
 )
 
 #Modelo 2------
-mod2 <- glmer(clase_media ~ edad_cw + sexo2 + estatus_obj + ideologia_cw + (1 | pais_f) + (1 | anio_pais), data = latinobarometro_sel, family = binomial(link = "logit"),
+mod2 <- glmer(clase_media ~ edad_cw + sexo2 + estatus_obj + ideologia_cw + (1 | pais_f/anio), data = latinobarometro_sel, family = binomial(link = "logit"),
               weights = wt)  
 
 #Modelo 3---------
-mod3 <- glmer(clase_media ~ edad_cw + estatus_obj + sexo2 + ideologia_cw + pib_ppa_cgm + ocupaciones_medias_cgm + informalidad_cgm + gini_cgm + (1 | pais_f) + (1 | anio_pais), data = latinobarometro_sel, family = binomial(link = "logit"), weights = wt)
+mod3 <- glmer(clase_media ~ edad_cw + estatus_obj + sexo2 + ideologia_cw + pib_ppa_cgm + ocupaciones_medias_cgm + informalidad_cgm + gini_cgm + (1 | pais_f/anio), data = latinobarometro_sel, family = binomial(link = "logit"), weights = wt)
 
 #Modelo 4a con interacciones----------
-mod4a <- glmer(clase_media ~  estatus_obj * pib_ppa_cgm + edad_cw + sexo2 + ideologia_cw  + ocupaciones_medias_cgm + informalidad_cgm + gini_cgm + (1 | pais_f) + (1 | anio_pais), data = latinobarometro_sel, family = binomial(link = "logit"), weights = wt)
+mod4a <- glmer(clase_media ~  estatus_obj * pib_ppa_cgm + edad_cw + sexo2 + ideologia_cw  + ocupaciones_medias_cgm + informalidad_cgm + gini_cgm + (1 | pais_f/anio), data = latinobarometro_sel, family = binomial(link = "logit"), weights = wt)
 
 # Modelo 4b con interacciones---------
-mod4b <- glmer(clase_media ~  estatus_obj * informalidad_cgm + edad_cw + sexo2 + ideologia_cw  + pib_ppa_cgm + ocupaciones_medias_cgm + gini_cgm + (1 | pais_f) + (1 | anio_pais), data = latinobarometro_sel, family = binomial(link = "logit"), weights = wt)
+mod4b <- glmer(clase_media ~  estatus_obj * informalidad_cgm + edad_cw + sexo2 + ideologia_cw  + pib_ppa_cgm + ocupaciones_medias_cgm + gini_cgm + (1 | pais_f/anio), data = latinobarometro_sel, family = binomial(link = "logit"), weights = wt)
 
 
 # Modelo 4c con interacciones---------
-mod4c <- glmer(clase_media ~  estatus_obj * ocupaciones_medias_cgm + edad_cw + sexo2 + ideologia_cw  + pib_ppa_cgm + informalidad_cgm + gini_cgm + (1 | pais_f) + (1 | anio_pais), data = latinobarometro_sel, family = binomial(link = "logit"), weights = wt)
+mod4c <- glmer(clase_media ~  estatus_obj * ocupaciones_medias_cgm + edad_cw + sexo2 + ideologia_cw  + pib_ppa_cgm + informalidad_cgm + gini_cgm + (1 | pais_f/anio), data = latinobarometro_sel, family = binomial(link = "logit"), weights = wt)
 
 # Modelo 5 con pendiente aleatoria---------
-mod5 <- glmer(clase_media ~  estatus_obj + edad_cw + sexo2 + ideologia_cw  + pib_ppa_cgm + informalidad_cgm + gini_cgm + ocupaciones_medias_cgm + (1 + estatus_obj | pais_f) + (1 | anio_pais), data = latinobarometro_sel, family = binomial(link = "logit"), weights = wt)
+mod5 <- glmer(clase_media ~  estatus_obj + edad_cw + sexo2 + ideologia_cw  + pib_ppa_cgm + informalidad_cgm + gini_cgm + ocupaciones_medias_cgm + (1 + estatus_obj | pais_f/anio), data = latinobarometro_sel, family = binomial(link = "logit"), weights = wt)
 
 
 VarCorr(mod5)
@@ -527,54 +646,49 @@ plot_model(mod3,
 
 
 
-
 ```{r Interceptos aleatorios}
 
-re <- ranef(mod5)$anio_pais %>% 
+re <- ranef(mod5)$`anio:pais_f` %>% 
   as.data.frame() %>%
   rename(effect = `(Intercept)`) %>%
-  mutate(anio_pais = rownames(ranef(mod5)$anio_pais)) %>% 
-  arrange(desc(effect)) %>%  # Ordenar de mayor a menor
+  mutate(anio_pais = rownames(ranef(mod5)$`anio:pais_f`)) %>% 
+  arrange(desc(effect)) %>%
   slice(c(1:10, (n() - 9):n()))
 
 ggplot(re, aes(x = reorder(anio_pais, effect), y = effect)) +
-  geom_point() +
+  geom_point(color = "steelblue", size = 3) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "gray50") +
   coord_flip() +
-  labs(x = "Año-País", y = "Efecto aleatorio (intercepto)", 
-       title = "Efectos aleatorios más fuertes por año-país") +
-  theme_minimal() +
-  theme(axis.text.y = element_text(size = 5)) 
+  labs(y = "Efecto aleatorio (intercepto)", 
+       title = "Interceptos aleatorios más fuertes por año y país",
+       subtitle = "Países seleccionados de América Latina. 2011-2023",
+       caption = "Fuente: elaboración propia en base a Latinobarómetro") +
+  theme(axis.text.y = element_text(size = 7),
+        axis.title.y = element_blank()) 
 
 
-re <- ranef(mod5)$pais %>% 
+re <- ranef(mod5)$pais_f %>% 
   as.data.frame() %>%
   rename(effect = `(Intercept)`) %>%
-  mutate(pais = rownames(ranef(mod5)$pais)) %>% 
-  arrange(desc(effect)) %>%  # Ordenar de mayor a menor
+  mutate(pais = rownames(ranef(mod5)$pais_f)) %>% 
+  arrange(desc(effect)) %>%
   slice(c(1:10, (n() - 9):n()))
 
 ggplot(re, aes(x = reorder(pais, effect), y = effect)) +
-  geom_point() +
+  geom_point(color = "steelblue", size = 3) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "gray50") +
   coord_flip() +
-  labs(x = "Año-País", y = "Efecto aleatorio (intercepto)", 
-       title = "Efectos aleatorios más fuertes por país") +
-  theme_minimal() +
-  theme(axis.text.y = element_text(size = 5)) 
+  labs(y = "Efecto aleatorio (intercepto)", 
+       title = "Interceptos aleatorios por país",
+       subtitle = "Países seleccionados de América Latina. 2011-2023",
+       caption = "Fuente: elaboración propia en base a Latinobarómetro") +
+  theme(axis.text.y = element_text(size = 8),
+        axis.title.y = element_blank()) 
 
 
 
 ```
 
-```{r Interacciones}
-
-library(ggeffects)
-
-plot(ggpredict(mod4c, terms = c("estatus_obj", "ocupaciones_medias_cgm [meansd]"))) +
-  labs(title = "Interacción entre estatus y % de ocupaciones medias",
-       x = "Estatus objetivo (estandarizado)",
-       y = "Probabilidad de autopercibirse como clase media")
-
-```
 
 ```{r Pendiente aleatoria}
 
@@ -591,11 +705,15 @@ ggplot(ranef_slope, aes(x = reorder(pais, pendiente_estatus), y = pendiente_esta
   geom_hline(yintercept = 0, linetype = "dashed", color = "gray50") +
   coord_flip() +
   labs(
-    x = "País",
-    y = "Pendiente aleatoria de estatus_obj",
-    title = "Pendientes aleatorias de estatus objetivo por país"
+    y = "Pendiente aleatoria",
+    title = "Pendientes aleatorias de estatus objetivo por país",
+    subtitle = "Países seleccionados de América Latina. 2011-2023",
+    caption = "Fuente: elaboración propia en base a Latinobarómetro"
   ) +
-  theme_minimal(base_size = 14)
+  theme(
+    axis.text.y = element_text(size = 8),
+    axis.title.y = element_blank()
+  )
 
 
 
