@@ -240,6 +240,8 @@ latinobarometro_sel %>%
         axis.title.y = element_blank(),
         axis.text.y = element_text(size = 10)) 
 
+ggsave("graficos/clase_subjetiva/indice_estratificacion.png", width = 8, height = 5, dpi = 300)
+
 rm(coords, var_obj_2011, var_obj_2013, var_obj_2015, var_obj_2017, var_obj_2018, var_obj_2020, var_obj_2023, var_obj_2024,
    mca2011, mca2013, mca2015, mca2017, mca2018, mca2020, mca2023, mca2024)
 
@@ -466,7 +468,8 @@ latinobarometro_sel2 %>%
   labs(
     title = "PIB per cápita y % de población identificada con la clase media",
     subtitle = "Países seleccionados de América Latina. 2011-2023. Curva LOESS ajustada",
-    x = "PBI per cápita (PPP)") +
+    x = "PBI per cápita (PPP)",
+    caption = "Fuente: elaboración propia en base a Latinobarómetro") +
   scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
   scale_x_continuous(breaks = scales::pretty_breaks(n = 8)) +
   theme(
@@ -496,7 +499,8 @@ latinobarometro_sel2 %>%
   labs(
     title = "Índice de Gini y % de población identificada con la clase media",
     subtitle = "Países seleccionados de América Latina. 2011-2023. Curva LOESS ajustada",
-    x = "Índice de Gini") +
+    x = "Índice de Gini",
+    caption = "Fuente: elaboración propia en base a Latinobarómetro") +
   scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
   scale_x_continuous(breaks = scales::pretty_breaks(n = 8)) +
   theme(
@@ -526,7 +530,8 @@ latinobarometro_sel2 %>%
   labs(
     title = "% de ocupaciones medias y % de población identificada con la clase media",
     subtitle = "Países seleccionados de América Latina. 2011-2023. Curva LOESS ajustada",
-    x = "% de ocupaciones medias") +
+    x = "% de ocupaciones medias",
+    caption = "Fuente: elaboración propia en base a Latinobarómetro") +
   scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
   scale_x_continuous(breaks = scales::pretty_breaks(n = 8),
                      labels = function(x) paste0(x, "%")) +
@@ -558,7 +563,8 @@ latinobarometro_sel2 %>%
   labs(
     title = "Tasa de informalidad y % de población identificada con la clase media",
     subtitle = "Países seleccionados de América Latina. 2011-2023. Curva LOESS ajustada",
-    x = "Tasa de informalidad") +
+    x = "Tasa de informalidad",
+    caption = "Fuente: elaboración propia en base a Latinobarómetro") +
   scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
   scale_x_continuous(breaks = scales::pretty_breaks(n = 8),
                      labels = function(x) paste0(x, "%")) +
@@ -659,12 +665,14 @@ ggplot(re, aes(x = reorder(anio_pais, effect), y = effect)) +
   geom_point(color = "steelblue", size = 3) +
   geom_hline(yintercept = 0, linetype = "dashed", color = "gray50") +
   coord_flip() +
-  labs(y = "Efecto aleatorio (intercepto)", 
+  labs(y = "Intercepto aleatorios", 
        title = "Interceptos aleatorios más fuertes por año y país",
        subtitle = "Países seleccionados de América Latina. 2011-2023",
        caption = "Fuente: elaboración propia en base a Latinobarómetro") +
   theme(axis.text.y = element_text(size = 7),
         axis.title.y = element_blank()) 
+
+ggsave("graficos/clase_subjetiva/interceptos_aleatorios_anio_pais.png", width = 8, height = 5, dpi = 300)
 
 
 re <- ranef(mod5)$pais_f %>% 
@@ -678,13 +686,14 @@ ggplot(re, aes(x = reorder(pais, effect), y = effect)) +
   geom_point(color = "steelblue", size = 3) +
   geom_hline(yintercept = 0, linetype = "dashed", color = "gray50") +
   coord_flip() +
-  labs(y = "Efecto aleatorio (intercepto)", 
+  labs(y = "Intercepto aleatorios", 
        title = "Interceptos aleatorios por país",
        subtitle = "Países seleccionados de América Latina. 2011-2023",
        caption = "Fuente: elaboración propia en base a Latinobarómetro") +
   theme(axis.text.y = element_text(size = 8),
         axis.title.y = element_blank()) 
 
+ggsave("graficos/clase_subjetiva/interceptos_aleatorios_pais.png", width = 8, height = 5, dpi = 300)
 
 
 ```
@@ -715,6 +724,7 @@ ggplot(ranef_slope, aes(x = reorder(pais, pendiente_estatus), y = pendiente_esta
     axis.title.y = element_blank()
   )
 
+ggsave("graficos/clase_subjetiva/pendientes_aleatorias_pais.png", width = 8, height = 5, dpi = 300)
 
 
 ```
