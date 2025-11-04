@@ -690,7 +690,7 @@ pred_clase %>%
   
 ## Conclusiones (II)
 - **Hipótesis 2**:
-  - Efectos ambibalentes de la sensibilidad y la percepción de la desigualdad
+  - Efectos ambivalentes de la sensibilidad y la percepción de la desigualdad
   
 - **Hipótesis 3**:
   - No son claras las diferencias observadas entre los países analizados y el incumplimiento impositivo 
