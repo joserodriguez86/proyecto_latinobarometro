@@ -242,6 +242,90 @@ ocupacion_hog <- ocupacion_hog %>%
 sectores_medios <- sectores_medios %>% 
   add_row(ocupacion_hog)
 
+#Ocupaciones profesionales (OIT-CEPAL)
+dat <- get_ilostat(id = 'EMP_TEMP_SEX_OC2_NB_A', 
+                   filters = list(
+                     ref_area = c("ARG", "BOL", "BRA", "CHL", "COL", "DOM", "ECU",
+                                  "SLV", "GTM", "HND", "MEX", "NIC",
+                                  "URY", "VEN"),
+                     sex = 'T'))
+
+sectores_profesionales <- dat %>%
+  filter(time >= 2010) %>%
+  filter(!str_detect(classif1, "TOTAL")) %>% 
+  group_by(ref_area, time) %>%
+  mutate(
+    total_ocup = sum(obs_value, na.rm = T),
+    ocup_pct = (obs_value / total_ocup)*100,
+    ocupaciones_profesionales = case_when((ref_area == "BRA" & time == 2011) |
+                                     (ref_area == "DOM" & time %in% c(2010:2014)) |
+                                     (ref_area == "ECU" & time %in% c(2010:2012)) |
+                                     (ref_area == "HND" & time %in% c(2010:2014)) |
+                                     (ref_area == "NIC" & time %in% c(2010,2012, 
+                                                                      2014)) |
+                                     (ref_area == "SLV" & time %in% c(2010:2012)) |
+                                     (ref_area == "URY" & time == 2010) ~ 
+                                     sum(ocup_pct[classif1 %in% c("OC2_ISCO88_21", 
+                                                                  "OC2_ISCO88_22", 
+                                                                  "OC2_ISCO88_23", 
+                                                                  "OC2_ISCO88_24")], na.rm = T),
+                                   TRUE ~ sum(ocup_pct[classif1 %in% c("OC2_ISCO08_21", 
+                                                                       "OC2_ISCO08_22", 
+                                                                       "OC2_ISCO08_23", 
+                                                                       "OC2_ISCO08_24", 
+                                                                       "OC2_ISCO08_25", 
+                                                                       "OC2_ISCO08_26")], na.rm = T)))
+
+
+sectores_profesionales <- sectores_profesionales %>%
+  rename(pais = ref_area, 
+         anio = time) %>% 
+  mutate(anio = as.numeric(anio)) %>%
+  summarise(ocupaciones_profesionales = mean(ocupaciones_profesionales, na.rm = T)) %>% 
+  ungroup()
+
+#datos de cepal para paraguay, costa rica, panama y peru
+ocupacion_cepal <- call.data(id.indicator = 755, language.en = F)
+ocupacion_hog <- ocupacion_cepal %>% 
+  filter(iso3 %in% c("PRY", "CRI", "PAN", "PER"),
+         Sexo == "Ambos sexos",
+         `Grupos ocupacionales CIUO 88` %in% c("2.Profesionales, científicos e intelectuales"),
+         Años >= 2010)
+
+ocupacion_hog <- ocupacion_hog %>%
+  select(iso3, Años, value) %>% 
+  rename(pais = iso3, 
+         anio = Años) 
+
+ocupacion_hog <- ocupacion_hog %>%
+  group_by(pais, anio) %>%
+  summarise(ocupaciones_profesionales = sum(value, na.rm = T)) %>% 
+  ungroup()
+
+sectores_profesionales <- sectores_profesionales %>% 
+  add_row(ocupacion_hog)
+
+
+#Ocupaciones cuentapropia (CEPAL)
+
+cuentapropia <- call.data(id.indicator = 136, language.en = F)
+
+cuentapropia <- cuentapropia %>% 
+  filter(iso3 %in% c("ARG", "BOL", "BRA", "CHL", "COL", "CRI", "DOM", "ECU",
+                     "SLV", "GTM", "HND", "MEX", "NIC", "PAN", "PRY", "PER",
+                     "URY", "VEN"),
+         (`Área geográfica` == "Nacional" & `País` != "Argentina") | 
+           (`Área geográfica` == "Urbana" & `País` == "Argentina"),
+         Años >= 2010,
+         Sexo == "Ambos sexos",
+         `Categoría ocupacional` == "Cuenta propia") %>% 
+  select(iso3, Años, value) %>% 
+  rename(pais = iso3, 
+         anio = Años, 
+         cuentapropia = value)
+
+
+
 #Unión bases agregadas--------------
 
 base_agregadas <- pib %>% 
@@ -251,7 +335,9 @@ base_agregadas <- pib %>%
   left_join(deciles_hog, by = c("pais", "anio")) %>% 
   left_join(empleo_publico, by = c("pais", "anio")) %>% 
   left_join(trabajo_informal, by = c("pais", "anio")) %>% 
-  left_join(sectores_medios, by = c("pais", "anio"))
+  left_join(sectores_medios, by = c("pais", "anio")) %>% 
+  left_join(sectores_profesionales, by = c("pais", "anio")) %>% 
+  left_join(cuentapropia, by = c("pais", "anio"))
 
 
 prueba <- base_agregadas %>% 
@@ -270,6 +356,8 @@ datos_paises <- base_agregadas %>%
   fill(emp_publico, .direction = "downup") %>%
   fill(informalidad, .direction = "downup") %>%
   fill(ocupaciones_medias, .direction = "downup") %>%
+  fill(ocupaciones_profesionales, .direction = "downup") %>%
+  fill(cuentapropia, .direction = "downup") %>%
   ungroup() %>% 
   rename(iso3 = pais)
 
