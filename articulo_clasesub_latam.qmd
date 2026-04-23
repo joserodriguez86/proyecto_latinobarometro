@@ -270,9 +270,9 @@ latinobarometro_sel %>%
                   country_icons = latinobarometro_sel$iso3,
                   width = 20,
                   lineheight = 2) +
-  labs(title = "Gráfico 1. Índice de estratificación social objetiva",
-       subtitle = "Países de América Latina. 2011-2024",
-       caption = "Fuente: elaboración propia en base a Latinobarómetro") +
+  # labs(title = "Gráfico 1. Índice de estratificación social objetiva",
+  #      subtitle = "Países de América Latina. 2011-2024",
+  #      caption = "Fuente: elaboración propia en base a Latinobarómetro") +
   scale_y_continuous(breaks = scales::pretty_breaks(n = 8)) +
   theme(axis.title.x = element_blank(),
         axis.title.y = element_blank(),
@@ -292,12 +292,12 @@ latinobarometro_sel %>%
   mutate(porcentaje = n / sum(n)) %>% 
   ggplot(aes(x = as.character(anio), y = porcentaje, fill = clase_subjetiva4)) +
   geom_col(position = "fill") +
-  labs(
-    title = "Gráfico 3. Distribución de la población según clase subjetiva",
-    subtitle = "Países seleccionados de América Latina. 2011-2024",
-    fill = "Clase subjetiva",
-    caption = "Fuente: elaboración propia en base a Latinobarómetro"
-  ) +
+  # labs(
+  #   title = "Gráfico 3. Distribución de la población según clase subjetiva",
+  #   subtitle = "Países seleccionados de América Latina. 2011-2024",
+  #   fill = "Clase subjetiva",
+  #   caption = "Fuente: elaboración propia en base a Latinobarómetro"
+  # ) +
   scale_fill_locuszoom() +
   scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
   theme(
@@ -343,11 +343,11 @@ latinobarometro_sel %>%
   ggplot(aes(x = as.character(anio), y = porcentaje)) +
   geom_col(fill = "steelblue") +
   geom_hline(yintercept = prom_clase_media$promedio, linetype = "dashed", color = "red") +
-  labs(
-    title = "Porcentaje de personas que se consideran clase media, media alta y alta",
-    subtitle = "Países seleccionados de América Latina. 2011-2024",
-    caption = "Fuente: elaboración propia en base a Latinobarómetro"
-  ) +
+  # labs(
+  #   title = "Porcentaje de personas que se consideran clase media, media alta y alta",
+  #   subtitle = "Países seleccionados de América Latina. 2011-2024",
+  #   caption = "Fuente: elaboración propia en base a Latinobarómetro"
+  # ) +
   scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
   theme(
     axis.title.x = element_blank(),
@@ -392,11 +392,11 @@ ggplot() +
             size = .7) +
   facet_wrap(~pais_f, ncol = 4) +
   scale_color_locuszoom() +
-  labs(
-    title = "Gráfico 2. Porcentaje de personas que se consideran clase media, media-alta y alta",
-    subtitle = "Países seleccionados de América Latina. 2011-2024",
-    caption = "Fuente: elaboración propia en base a Latinobarómetro"
-  ) +
+  # labs(
+  #   title = "Gráfico 2. Porcentaje de personas que se consideran clase media, media-alta y alta",
+  #   subtitle = "Países seleccionados de América Latina. 2011-2024",
+  #   caption = "Fuente: elaboración propia en base a Latinobarómetro"
+  # ) +
   scale_y_continuous(labels = scales::percent_format(accuracy = 1), breaks = seq(0, .7, .2), limits = c(0, .7)) +
   theme(
     axis.text.x = element_text(angle = 45, hjust = 1, size = 8),
@@ -429,11 +429,11 @@ latinobarometro_sel %>%
   geom_bar(aes(x= fct_rev(clase_subjetiva4), y=porcentaje_neg), stat="identity", fill = "skyblue", alpha = 0.8) +
   coord_flip() +
   scale_y_continuous(labels = function(x) paste0(abs(x), "%")) +
-  labs(
-    title = "Gráfico 5. Distribución de la población según clase subjetiva",
-    subtitle = "Países seleccionados de América Latina. 2024",
-    caption = "Fuente: elaboración propia en base a Latinobarómetro"
-  ) +
+  # labs(
+  #   title = "Gráfico 5. Distribución de la población según clase subjetiva",
+  #   subtitle = "Países seleccionados de América Latina. 2024",
+  #   caption = "Fuente: elaboración propia en base a Latinobarómetro"
+  # ) +
   theme(
     axis.title.x = element_blank(),
     axis.title.y = element_blank(),
@@ -449,11 +449,11 @@ latinobarometro_sel %>%
   filter(!is.na(clase_subjetiva4), anio == 2024) %>%
   ggplot(aes(x = 1, y = estatus_01, weight = wt)) +   # x = constante para un solo violín
   geom_violin(fill = "skyblue", alpha = 0.8) +
-  labs(
-    title = "Gráfico 4. Distribución de la población según estatus objetivo (0-1)",
-    subtitle = "Países seleccionados de América Latina. 2024",
-    caption = "Fuente: elaboración propia en base a Latinobarómetro"
-  ) +
+  # labs(
+  #   title = "Gráfico 4. Distribución de la población según estatus objetivo (0-1)",
+  #   subtitle = "Países seleccionados de América Latina. 2024",
+  #   caption = "Fuente: elaboración propia en base a Latinobarómetro"
+  # ) +
   theme(
     axis.title.x = element_blank(),
     axis.title.y = element_blank(),
@@ -488,11 +488,11 @@ latinobarometro_sel2 %>%
     aes(linetype = "Loess")
   ) +
   ggrepel::geom_text_repel(aes(label = anio_pais), size = 1.5) +
-  labs(
-    title = "Gráfico 6. PIB per cápita y % de población identificada con la clase media",
-    subtitle = "Países seleccionados de América Latina. 2011-2023. Curva LOESS ajustada",
-    x = "PBI per cápita (dólar PPA)",
-    caption = "Fuente: elaboración propia en base a Latinobarómetro") +
+  # labs(
+  #   title = "Gráfico 6. PIB per cápita y % de población identificada con la clase media",
+  #   subtitle = "Países seleccionados de América Latina. 2011-2023. Curva LOESS ajustada",
+  #   x = "PBI per cápita (dólar PPA)",
+  #   caption = "Fuente: elaboración propia en base a Latinobarómetro") +
   scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
   scale_x_continuous(breaks = scales::pretty_breaks(n = 8)) +
   theme(
@@ -519,11 +519,11 @@ latinobarometro_sel2 %>%
     aes(linetype = "Loess")
   ) +
   ggrepel::geom_text_repel(aes(label = anio_pais), size = 1.5) +
-  labs(
-    title = "Gráfico 7. Índice de Gini y % de población identificada con la clase media",
-    subtitle = "Países seleccionados de América Latina. 2011-2023. Curva LOESS ajustada",
-    x = "Índice de Gini",
-    caption = "Fuente: elaboración propia en base a Latinobarómetro") +
+  # labs(
+  #   title = "Gráfico 7. Índice de Gini y % de población identificada con la clase media",
+  #   subtitle = "Países seleccionados de América Latina. 2011-2023. Curva LOESS ajustada",
+  #   x = "Índice de Gini",
+  #   caption = "Fuente: elaboración propia en base a Latinobarómetro") +
   scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
   scale_x_continuous(breaks = scales::pretty_breaks(n = 8)) +
   theme(
@@ -550,11 +550,11 @@ latinobarometro_sel2 %>%
     aes(linetype = "Loess")
   ) +
   ggrepel::geom_text_repel(aes(label = anio_pais), size = 1.5) +
-  labs(
-    title = "Gráfico 8. % de ocupaciones medias y % de población identificada con la clase media",
-    subtitle = "Países seleccionados de América Latina. 2011-2023. Curva LOESS ajustada",
-    x = "% de ocupaciones medias",
-    caption = "Fuente: elaboración propia en base a Latinobarómetro") +
+  # labs(
+  #   title = "Gráfico 8. % de ocupaciones medias y % de población identificada con la clase media",
+  #   subtitle = "Países seleccionados de América Latina. 2011-2023. Curva LOESS ajustada",
+  #   x = "% de ocupaciones medias",
+  #   caption = "Fuente: elaboración propia en base a Latinobarómetro") +
   scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
   scale_x_continuous(breaks = scales::pretty_breaks(n = 8),
                      labels = function(x) paste0(x, "%")) +
@@ -583,11 +583,11 @@ latinobarometro_sel2 %>%
     aes(linetype = "Loess")
   ) +
   ggrepel::geom_text_repel(aes(label = anio_pais), size = 1.5) +
-  labs(
-    title = "Gráfico 9. Tasa de informalidad y % de población identificada con la clase media",
-    subtitle = "Países seleccionados de América Latina. 2011-2023. Curva LOESS ajustada",
-    x = "Tasa de informalidad",
-    caption = "Fuente: elaboración propia en base a Latinobarómetro") +
+  # labs(
+  #   title = "Gráfico 9. Tasa de informalidad y % de población identificada con la clase media",
+  #   subtitle = "Países seleccionados de América Latina. 2011-2023. Curva LOESS ajustada",
+  #   x = "Tasa de informalidad",
+  #   caption = "Fuente: elaboración propia en base a Latinobarómetro") +
   scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
   scale_x_continuous(breaks = scales::pretty_breaks(n = 8),
                      labels = function(x) paste0(x, "%")) +
@@ -800,9 +800,9 @@ ggplot(ranef_sel, aes(x = plogis(intercepto_total), y = pendiente_total)) +
   labs(
     x = "Probabilidad promedio de posicionarse en la clase media",
     y = "Pendiente del estatus social objetivo (odds ratio)",
-    title = "Gráfico 10. Interacción entre pendientes e interceptos aleatorios (modelo 5)",
-    subtitle = "Países seleccionados de América Latina. Años 2011, 2017 y 2023",
-    caption = "Fuente: elaboración propia en base a Latinobarómetro"
+    # title = "Gráfico 10. Interacción entre pendientes e interceptos aleatorios (modelo 5)",
+    # subtitle = "Países seleccionados de América Latina. Años 2011, 2017 y 2023",
+    # caption = "Fuente: elaboración propia en base a Latinobarómetro"
   ) +
   scale_y_continuous(breaks = scales::pretty_breaks(n = 8)) +
   theme(
