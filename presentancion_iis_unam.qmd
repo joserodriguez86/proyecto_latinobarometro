@@ -140,7 +140,7 @@ latinobarometro$pib_ppa_log <- log(latinobarometro$pib_ppa)
 :::
 
 ::: fragment
-::: {.callout-tip title="Pregunta central" icon="false"}
+::: {.callout-tip title="Pregunta central - Enfoque indirecto" icon="false"}
 ¿Podría decirme si, recientemente, sabe Ud. de alguna persona, o ha oído Ud. comentar a algún familiar o conocido sobre alguien que se las arregló para pagar menos impuestos de lo que debía? 
 :::
 
@@ -246,7 +246,7 @@ tabla_descriptivos <- latinobarometro2020 %>%
                            pago_impuestos_dic ~ "Opinión pago de impuestos", 
                            aceptabilidad_desigualdad ~ "Aceptación de la desigualdad (1 inaceptable - 10 aceptable)",
                            corrupcion_f ~ "Progreso contra la corrupción",
-                           ideologia ~ "Ideología (1 izqda - 10 derecha)",
+                           ideologia ~ "Ideología (0 izqda - 10 derecha)",
                            arreglo_impuestos ~ "Arreglo para pagar menos impuestos"),
                  statistic = list(all_continuous() ~ "{mean} ({sd})",
                                   all_categorical() ~ "{n} ({p}%)"),
@@ -522,7 +522,7 @@ reg_coef <- plot_summs(mod2_b, mod2_c, ci_level = 0.91,
                                "Edad2" = "edad2",
                                "Varón" = "sexo2Varón",
                                "Estratificación objetiva" = "dim1_std",
-                               "Clase sub. media alta" = "clase_subjetiva4Media alta",
+                               "Clase sub. media alta (ref: Baja)" = "clase_subjetiva4Media alta",
                                "Clase sub. media" = "clase_subjetiva4Media",
                                "Clase sub. media baja" = "clase_subjetiva4Media baja",
                                "Distribución muy injusta" = "just_dist_ingresos_dicMuy injusta",
@@ -538,7 +538,7 @@ reg_coef <- plot_summs(mod2_b, mod2_c, ci_level = 0.91,
                                "Ideologia (izq-der)" = "ideologia"))
 
 reg_coef +
-  labs(title ="Modelos de regresión logística. Arreglo para pagar menos impuestos. 2020",
+  labs(title ="Modelos de regresión logística. Arreglo para \npagar menos impuestos. 2020",
        subtitle ="Coeficientes exponenciados",
        caption = "Fuente: elaboración propia en base a Latinobarómetro",
        x = "Razones de momios") +
