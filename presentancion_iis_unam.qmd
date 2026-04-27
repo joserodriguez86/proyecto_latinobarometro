@@ -1,6 +1,7 @@
 ---
-title: "La desigualdad no se evade"
-subtitle: "Una exploración sociológica sobre incumplimiento impositivo y estratificación social en América Latina"  
+title: "La desigualdad no se evade. <br> Una exploración sociológica sobre incumplimiento impositivo y estratificación social en América Latina" 
+subtitle: "Premio XIII Premio Iberoamericano en Ciencias Sociales – IIS UNAM OEI <br> 
+Revista Mexicana de Sociología, 2026"
 author:
   - name: "Gonzalo Assusa"
     affiliation: "Instituto de Humanidades, Universidad Nacional de Córdoba, CONICET"
@@ -84,21 +85,69 @@ latinobarometro$pib_ppa_log <- log(latinobarometro$pib_ppa)
 
 # Introducción y antecedentes {background-color="#00589b"}
 
-## Introducción y antecedentes
+## Problema central
 
-:::incremental
 
-- Los **impuestos** como terreno de disputas por los procesos distributivos, redistributivos y de legitimación social y política en nuestras sociedades.  
+América Latina combina dos rasgos persistentes:  
 
-- Abordajes: 
-  - estudios económicos y sociales sobre evasión tributaria (racionalidad y moral tributaria)
-  - estudios sociológicos sobre preferencias redistributivas  
+- Altos niveles de desigualdad social.
+- Amplia presencia de evasión y elusión tributaria.
 
-- Necesidad de comprender estos comportamientos a partir de la posición de las personas en la estructura social y de las representaciones que tienen sobre la desigualdad social.
+El artículo propone estudiar ambas dimensiones de forma articulada, 
+aunque desde un enfoque no convencional.
 
+::: {.callout-note title="Pregunta central"}
+¿Cómo se relacionan la posición social, las percepciones sobre 
+desigualdad y las prácticas de incumplimiento impositivo?
 :::
 
-## Introducción y objetivo
+## Punto de partida sociológico  
+
+
+Los impuestos no son solo un mecanismo económico.  
+
+
+También constituyen:  
+
+-	El núcleo del lazo fiscal y vínculo entre ciudadanía y Estado  
+-	Mecanismo de integración sistémica y reproducción social  
+-	Espacio de disputas distributivas y por la legitimidad política  
+
+::: {.callout-tip title="Idea clave"}
+El cumplimiento tributario no depende solamente del cálculo racional, sino que está incrustado en recursos sociales, legitimidad institucional y posiciones de poder desigualmente distribuidas.
+:::
+
+
+## Vacancia en la literatura (I)  
+
+::: {style="font-size: 0.80em"}
+La literatura académica se ha concentrado en:  
+
+-	El cumplimiento y su relación con la moral fiscal y la confianza institucional  
+- Las preferencias redistributivas y su relación con la estructura social, sin relación con el cumplimiento  
+- La informalidad como factor de evasión, focalizando la mirada sobre los sectores subalternos y construyendo un estereotipo sobre su relación con / y su concepción del Estado  
+
+Problemas:  
+
+- Teoría de la acción predominante (racional o normativa) y poca exploración de otras perspectivas, como la teoría de la práctica o las perspectivas estratégicas  
+- Dificultades para conectar posicionamientos u opiniones con prácticas impositivas concretas  
+:::
+
+
+## Vacancia en la literatura (II) 
+
+Existen pocos estudios que relacionen simultáneamente:  
+
+1. Estratificación social  
+2. Percepción de desigualdad  
+3. Incumplimiento tributario  
+
+> **Dialéctica de la evasión y la desigualdad**  
+No se trata solamente de que el incumplimiento fiscal y la regresividad reproduzcan la desigualdad social.  
+Sino que la desigualdad y la informalidad funcionan como factores de desgranamiento del cumplimiento impositivo.  
+
+
+## Objetivo principal e Hipótesis
 
 ::: columns
 ::: {.column width="50%"}
@@ -112,23 +161,6 @@ latinobarometro$pib_ppa_log <- log(latinobarometro$pib_ppa)
 :::
 :::
 
-
-## Estudios sobre evasión, sociología fiscal y moral tributaria 
-
-::::incremental
-::: {style="font-size: 0.80em"}
-
-- El alto nivel de evasión impositiva calculada para América Latina implica un límite estructural a la capacidad recaudatoria de los países de la región 
-  - América Latina y el Caribe recaudó en impuestos, durante 2023, un 21,3% de su PIB (OCDE: 33,9%)
-
-- Estudios de moral fiscal:  
-  - Efectos positivos del carácter ritualizado del pago de impuestos directos en contraposición al carácter tácito del pago de los impuestos indirectos (Atria, 2022; Braunstein, 2024). 
-  - La moral fiscal correlaciona de manera negativa con el volumen de la economía informal (Torgler, 2007).
-  - La creencia en la autoridad estatal o la adhesión a subculturas de evasión, son los principales elementos explicativos del incumplimiento tributario (Bergman, 2015).
-
-
-:::
-::::
 
 # Datos, variables y técnicas {background-color="#00589b"}
 
@@ -681,17 +713,21 @@ pred_clase %>%
 
 # Conclusiones {background-color="#00589b"}
 
-## Conclusiones (I)
-- Cubrir la vacancia existente entre los estudios de percepción de la redistribución y moral tributaria  
+## Hallazgos y aportes (I)
 
-- **Hipótesis 1**:
-  - Hay evidencia de que a mayor posición en la estructura social existe una mayor probabilidad de incumplimiento impositivo
-  - A medida que la representación de clase es más alta también se favorecen las probabilidades de incumplimiento impositivo 
-  
-## Conclusiones (II)
-- **Hipótesis 2**:
-  - Efectos ambivalentes de la sensibilidad y la percepción de la desigualdad
-  
-- **Hipótesis 3**:
-  - No son claras las diferencias observadas entre los países analizados y el incumplimiento impositivo 
-  - Sin embargo, Argentina y Chile funcionan como ejemplos de países con “ecosistemas” o entornos impositivos diferenciados
+- Necesidad de continuar generando evidencia empírica sobre evasión a nivel de *prácticas individuales*  
+- Rediscutir el lugar de la consciencia tributaria explícita y sus efectos en el cumplimiento impositivo, particularmente en un contexto de *descontento político generalizado*  
+- Las tendencias muestran la existencia de ciertos *ecosistemas fiscales* anclados en estructuras sociales diferentes, aunque es necesario seguir explorando cómo se incorporan estos factores en los modelos  
+
+## Hallazgos y aportes (II)
+
+- Mientras más alta la posición en la estructura social, mayores las chances de evasión, dadas las mayores condiciones para evitar pagar impuestos  
+-	La clase social subjetiva y las preferencias redistributivas operan en un sentido esperado  
+- Evaluación subjetiva de la desigualdad y de las políticas contra la corrupción funcionan como indicadores de malestar ciudadanoque se relacionan con el incumplimiento impositivo, aunque no necesariamente en la dirección esperada  
+
+
+# ¡Muchas gracias! {background-color="#00589b" style="text-align: center;"}  
+
+{{< fa envelope >}} [gonzaloassusa@gmail.com](mailto:gonzaloassusa@gmail.com)  
+
+{{< fa envelope >}} [jrodriguez@conicet.gov.ar](mailto:jrodriguez@conicet.gov.ar)
