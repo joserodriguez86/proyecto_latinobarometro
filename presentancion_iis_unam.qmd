@@ -723,11 +723,11 @@ pred_clase %>%
 
 - Mientras más alta la posición en la estructura social, mayores las chances de evasión, dadas las mayores condiciones para evitar pagar impuestos  
 -	La clase social subjetiva y las preferencias redistributivas operan en un sentido esperado  
-- Evaluación subjetiva de la desigualdad y de las políticas contra la corrupción funcionan como indicadores de malestar ciudadanoque se relacionan con el incumplimiento impositivo, aunque no necesariamente en la dirección esperada  
+- Evaluación subjetiva de la desigualdad y de las políticas contra la corrupción funcionan como indicadores de malestar ciudadano que se relacionan con el incumplimiento impositivo, aunque no necesariamente en la dirección esperada  
 
 
 # ¡Muchas gracias! {background-color="#00589b" style="text-align: center;"}  
 
-{{< fa envelope >}} [gonzaloassusa@gmail.com](mailto:gonzaloassusa@gmail.com)  
+{{< fa envelope >}} [gonzalo.assusa@unc.edu.ar](mailto:gonzalo.assusa@unc.edu.ar)  
 
 {{< fa envelope >}} [jrodriguez@conicet.gov.ar](mailto:jrodriguez@conicet.gov.ar)
