@@ -1,6 +1,6 @@
 ---
 title: "La desigualdad no se evade. <br> Una exploración sociológica sobre incumplimiento impositivo y estratificación social en América Latina" 
-subtitle: "Premio XIII Premio Iberoamericano en Ciencias Sociales – IIS UNAM OEI <br> 
+subtitle: "XIII Premio Iberoamericano en Ciencias Sociales – IIS UNAM OEI <br> 
 Revista Mexicana de Sociología, 2026"
 author:
   - name: "Gonzalo Assusa"
