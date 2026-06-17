@@ -31,6 +31,14 @@ latinobarometro <- latinobarometro %>%
                                    levels = c("Media / Alta", "Media baja", "Baja"))) %>% 
   filter(pais_f != "Esp")
 
+latinobarometro <- latinobarometro %>% 
+  mutate(pais_c = factor(latinobarometro$pais, 
+                                  labels = c("Argentina", "Bolivia", 
+                                             "Brasil", "Chile", 
+                                             "Colombia", "Costa Rica", 
+                                             "R. Dominicana", "Ecuador",
+                                             "El Salvador", "Guatemala", "Honduras", "México", "Nicaragua", "Panamá", "Paraguay", "Perú", "Uruguay", "Venezuela")))
+
 
 #ACM------------------------
 latinobarometro <- latinobarometro %>%  
@@ -86,7 +94,7 @@ prom_evasion <- latinobarometro %>%
   summarise(evasion = weighted.mean(arreglo_impuestos, wt = wt, na.rm = T))          
 
 latinobarometro %>% 
-  group_by(anio, pais_f) %>% 
+  group_by(anio, pais_c) %>% 
   summarise(evasion = weighted.mean(arreglo_impuestos, wt = wt, na.rm = T)) %>%
   na.omit() %>% 
   ggplot(aes(x = anio, y = evasion, group = 1)) +
@@ -107,9 +115,10 @@ latinobarometro %>%
   ) +
   scale_y_continuous(labels = scales::percent_format(accuracy = 1, suffix = ""), breaks = seq(0, .5, 0.15), limits = c(0, .5)) +
   scale_x_continuous(breaks = seq(1998, 2020, 2), limits = c(1998, 2020)) +
-  facet_wrap(~pais_f, ncol = 3)
+  facet_wrap(~pais_c, ncol = 3)
 
 
+ggsave("graficos/libro/porcentaje_evasion_impuestos.svg", width = 4.9, height = 3.5, dpi = 300)
 ggsave("graficos/libro/porcentaje_evasion_impuestos.png", width = 4.9, height = 3.5, dpi = 300)
 
 ##Justificación evasión-----------------
@@ -129,6 +138,7 @@ latinobarometro %>%
   scale_x_continuous(breaks = c(1998, 2003, 2005, 2008, 2009, 2010, 2011, 2013, 2015, 2016, 2023))
 
 ggsave("graficos/libro/tendencias_evasion_just.png", width = 4.9, height = 3.5, dpi = 300)
+ggsave("graficos/libro/tendencias_evasion_just.svg", width = 4.9, height = 3.5, dpi = 300)
 
 
 ##Estratificación y evasión------------------
@@ -174,18 +184,22 @@ latinobarometro2020 %>%
   scale_x_continuous(labels = scales::number_format(accuracy = 0.1), breaks = seq(-1, 1, 0.2), limits = c(-1, 1))
 
 ggsave("graficos/libro/estratificacion_evasion.png", width = 4.9, height = 3.5, dpi = 300)
-
+ggsave("graficos/libro/estratificacion_evasion.svg", width = 4.9, height = 3.5, dpi = 300)
 
 ## Clase subjetiva y evasión --------------
 
 latinobarometro2020 %>%
   filter(!is.na(clase_subjetiva4)) %>% 
-  group_by(pais_f, clase_subjetiva4) %>%
+  group_by(pais_c, clase_subjetiva4) %>%
   summarise(
     promedio = weighted.mean(arreglo_impuestos, wt = wt, na.rm = T)) %>% 
   ggplot(aes(x = clase_subjetiva4, y = promedio)) +
   geom_bar(stat = "identity", fill = "steelblue", alpha = .8) +
   geom_hline(yintercept = prom_evasion$evasion, linetype = "dashed", color = "red") +
+  geom_text(
+    aes(label = scales::percent(promedio, accuracy = 1)),
+    size = 2.5, vjust = 1.3, hjust = 0.5
+  ) +
   # labs(title = "Gráfico 5. Porcentaje de personas que conoce a alguien que pagó menos \nimpuestos de lo que debía, según clase social subjetiva",
   #      subtitle = "Países de América Latina. 2020 (Porcentaje general en línea punteada roja).",
   #      caption = "Fuente: elaboración propia en base a Latinobarómetro") +
@@ -199,11 +213,11 @@ latinobarometro2020 %>%
   ) +
   scale_y_continuous(labels = scales::percent_format(accuracy = 1, suffix = ""), breaks = seq(0, .65, 0.15), limits = c(0, .65)) +
   scale_x_discrete(labels = function(x) str_wrap(x, width = 5)) +
-  facet_wrap(~pais_f, ncol = 2)
+  facet_wrap(~pais_c, ncol = 2)
 
 
 ggsave("graficos/libro/porcentaje_evasion_impuestos_clase_subjetiva.png", width = 4.9, height = 7, dpi = 300)
-
+ggsave("graficos/libro/porcentaje_evasion_impuestos_clase_subjetiva.svg", width = 4.9, height = 7, dpi = 300)
 
 ## Regresión ---------
 latinobarometro2020$just_dist_ingresos_dic <- relevel(latinobarometro2020$just_dist_ingresos_dic, ref = "Muy justa-justa-injusta")
@@ -254,6 +268,7 @@ reg_coef +
         legend.title = element_blank()) 
 
 ggsave("graficos/libro/regresion.png", width = 6, height = 4, dpi = 300)
+ggsave("graficos/libro/regresion.svg", width = 6, height = 4, dpi = 300)
 
 tabla <- export_summs(mod1, mod2, model.names = c("Efecto fijo países", "Sólo Argentina"), 
                      exp = T, stars = c(`***` = 0.01, `**` = 0.05, `*` = 0.1),
