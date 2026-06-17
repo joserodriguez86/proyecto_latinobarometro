@@ -297,3 +297,99 @@ tabla %>%
 tabla <- tabla %>% 
   as_flextable() %>%  
   flextable::save_as_docx(path = "graficos/libro/regresion.docx")
+
+
+#Predicciones
+library(ggeffects)
+
+pred_estatus <- ggpredict(mod1, terms = c("dim1_std[-2, -1, 0, 1, 2]", "pais_f"),
+                          typical = c(numeric = "mean", factor = "mode"))
+
+avg_pred <- mean(pred_estatus$predicted)
+
+estatus_labs <- c("Muy bajo", "Bajo", "Medio", "Alto", "Muy alto")
+names(estatus_labs) <- c("-2", "-1", "0", "1", "2")
+
+pred_estatus_agrup <- pred_estatus %>% 
+  as_tibble() %>%
+  mutate(agrupado = case_when(group == "Arg" ~ "Argentina",
+                              group == "Chi" ~ "Chile",
+                              TRUE ~ "Resto América Latina")) %>% 
+  group_by(x, agrupado) %>%
+  summarise(predicted = mean(predicted),
+            conf.low = mean(conf.low),
+            conf.high = mean(conf.high)) %>%
+  ungroup()
+
+
+
+pred_estatus_agrup %>% 
+  ggplot(aes(x = predicted, y = reorder(agrupado, predicted))) +
+  geom_vline(xintercept = avg_pred, linetype = "dashed", color = "red") +
+  geom_point(position = position_dodge(width = 0.6)) +
+  geom_errorbarh(aes(xmin = conf.low, xmax = conf.high),
+                 height = 0.1, position = position_dodge(width = 0.6)) +
+  facet_wrap(~x, labeller = labeller(x = estatus_labs), ncol = 5) +
+  scale_x_continuous(labels = scales::percent_format(accuracy = 1)) +
+  # labs(
+  #   title = "Gráfico 6. Probabilidad de incumplimiento impositivo según estatus objetivo",
+  #   subtitle = "Promedio general en línea punteada roja.",
+  #   caption = "Fuente: elaboración propia en base a Latinobarómetro. \nVariables de control mantenidas en promedio (cuantitativas) y en su moda (cualitativas)."
+  # ) +
+  theme(
+    axis.title.x = element_blank(),
+    axis.title.y = element_blank(),
+    axis.text.x = element_text(size = 8),
+    axis.text.y = element_text(size = 9),
+    strip.text = element_text(face = "bold", size = 9, margin = margin(t = 2, b = 2))
+  ) 
+
+ggsave("graficos/libro/predicciones_estatus.png", width = 8, height = 3, dpi = 300)
+ggsave("graficos/libro/predicciones_estatus.svg", width = 8, height = 3, dpi = 300)
+
+
+pred_clase <- ggpredict(mod1, terms = c("clase_subjetiva4", "pais_f"),
+                        typical = c(numeric = "mean", factor = "mode"))
+
+pred_clase$x <- factor(pred_clase$x, levels = c("Baja", "Media baja", "Media", "Media alta"))
+
+avg_pred <- mean(pred_clase$predicted)
+
+pred_clase_agrup  <- pred_clase %>% 
+  as_tibble() %>%
+  mutate(agrupado = case_when(group == "Arg" ~ "Argentina",
+                              group == "Chi" ~ "Chile",
+                              TRUE ~ "Resto América Latina")) %>% 
+  group_by(x, agrupado) %>%
+  summarise(predicted = mean(predicted),
+            conf.low = mean(conf.low),
+            conf.high = mean(conf.high)) %>%
+  ungroup()
+
+
+pred_clase_agrup %>% 
+  ggplot(aes(x = predicted, y = reorder(agrupado, predicted))) +
+  geom_vline(xintercept = avg_pred, linetype = "dashed", color = "red") +
+  geom_point(position = position_dodge(width = 0.6)) +
+  geom_errorbarh(aes(xmin = conf.low, xmax = conf.high),
+                 height = 0.1, position = position_dodge(width = 0.6)) +
+  facet_wrap(~x, ncol = 4) +
+  scale_x_continuous(labels = scales::percent_format(accuracy = 1)) +
+  scale_color_paletteer_d("PNWColors::Sunset2") +
+  # labs(
+  #   title = "Gráfico 7. Probabilidad de incumplimiento impositivo según clase subjetiva",
+  #   subtitle = "Promedio general en línea punteada roja.",
+  #   color = "Clase subjetiva",
+  #   caption = "Fuente: elaboración propia en base a Latinobarómetro. \nVariables de control mantenidas en promedio (cuantitativas) y en su moda (cualitativas)."
+  # ) +
+  theme(
+    axis.title.x = element_blank(),
+    axis.title.y = element_blank(),
+    axis.text.x = element_text(size = 8),
+    axis.text.y = element_text(size = 9),
+    legend.position = "bottom",
+    strip.text = element_text(face = "bold", size = 9, margin = margin(t = 2, b = 2))
+  )
+
+ggsave("graficos/libro/predicciones_clase.png", width = 8, height = 3, dpi = 300)
+ggsave("graficos/libro/predicciones_clase.svg", width = 8, height = 3, dpi = 300)
