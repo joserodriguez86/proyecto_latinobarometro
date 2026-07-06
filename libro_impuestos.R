@@ -135,7 +135,8 @@ latinobarometro %>%
         legend.title = element_blank(),
         legend.position = "bottom") +
   scale_y_continuous(limits = c(0, .8), breaks = seq(0, .8, .1), labels = scales::percent_format(accuracy = 1)) +
-  scale_x_continuous(breaks = c(1998, 2003, 2005, 2008, 2009, 2010, 2011, 2013, 2015, 2016, 2023))
+  scale_x_continuous(breaks = c(1998, 2003, 2005, 2008, 2009, 2010, 2011, 2013, 2015, 2016, 2023)) +
+  scale_color_manual(values = c("red", "black"))
 
 ggsave("graficos/libro/tendencias_evasion_just.png", width = 4.9, height = 3.5, dpi = 300)
 ggsave("graficos/libro/tendencias_evasion_just.svg", width = 4.9, height = 3.5, dpi = 300)
