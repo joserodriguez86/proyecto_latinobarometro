@@ -10,6 +10,10 @@ $presentation-h1-font-size: 80px;
 
 /*-- scss:rules --*/
 
+.white-title h1 {
+  color: white !important;
+}
+
 .blackbox {
   color: #F51111;
   background-color: transparent;
