@@ -585,3 +585,198 @@ latinobarometro_sel %>%
 ```
 :::
 :::
+
+
+## Análisis multinivel (Primeros pasos) {background-image="imagenes/fondo_blanco.jpeg" background-opacity="0.10"} 
+
+```{r Datos contextuales y clase subjetiva}
+#| layout: [50,50]
+#| fig-width: 6
+#| fig-height: 5
+#| fig-align: center
+
+
+latinobarometro_sel2 <- latinobarometro_sel %>% 
+  filter(anio < 2024)
+
+# PBI
+latinobarometro_sel2 %>% 
+  filter(!is.na(clase_subjetiva4)) %>%
+  group_by(anio_pais, pib_ppa, clase_media) %>% 
+  tally(wt) %>% 
+  mutate(porcentaje = n / sum(n)) %>% 
+  filter(clase_media == 1) %>%
+  ggplot(aes(x = pib_ppa, y = porcentaje)) +
+  geom_point() +
+  geom_smooth(
+    method = "loess",
+    se = T,
+    color = "skyblue",
+    linewidth = 1,
+    aes(linetype = "Loess")
+  ) +
+  ggrepel::geom_text_repel(aes(label = anio_pais), size = 1.5) +
+  labs(
+    title = "PIB per cápita y % de población identificada con la clase media",
+    subtitle = "Países seleccionados de América Latina. 2011-2023. Curva LOESS ajustada",
+    x = "PBI per cápita (dólar PPA)",
+    caption = "Fuente: elaboración propia en base a Latinobarómetro") +
+  scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
+  scale_x_continuous(breaks = scales::pretty_breaks(n = 8)) +
+  theme(
+    axis.title.y = element_blank(),
+    legend.position = "none"
+  )
+
+
+# Gini
+latinobarometro_sel2 %>%
+  filter(!is.na(clase_subjetiva4)) %>%
+  group_by(anio_pais, gini, clase_media) %>% 
+  tally(wt) %>% 
+  mutate(porcentaje = n / sum(n)) %>% 
+  filter(clase_media == 1) %>%
+  ggplot(aes(x = gini, y = porcentaje)) +
+  geom_point() +
+  geom_smooth(
+    method = "loess",
+    se = T,
+    color = "skyblue",
+    linewidth = 1,
+    aes(linetype = "Loess")
+  ) +
+  ggrepel::geom_text_repel(aes(label = anio_pais), size = 1.5) +
+  labs(
+    title = "Índice de Gini y % de población identificada con la clase media",
+    subtitle = "Países seleccionados de América Latina. 2011-2023. Curva LOESS ajustada",
+    x = "Índice de Gini",
+    caption = "Fuente: elaboración propia en base a Latinobarómetro") +
+  scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
+  scale_x_continuous(breaks = scales::pretty_breaks(n = 8)) +
+  theme(
+    axis.title.y = element_blank(),
+    legend.position = "none"
+  )
+
+
+```
+
+
+## Análisis multinivel (Primeros pasos) {background-image="imagenes/fondo_blanco.jpeg" background-opacity="0.10"} 
+
+```{r Datos contextuales y clase subjetiva 2} 
+#| layout: [50,50]
+#| fig-width: 6
+#| fig-height: 5
+#| fig-align: center
+
+# Ocupaciones medias
+latinobarometro_sel2 %>%
+  filter(!is.na(clase_subjetiva4)) %>%
+  group_by(anio_pais, ocupaciones_medias, clase_media) %>%
+  tally(wt) %>%
+  mutate(porcentaje = n / sum(n)) %>%
+  filter(clase_media == 1) %>%
+  ggplot(aes(x = ocupaciones_medias, y = porcentaje)) +
+  geom_point() +
+  geom_smooth(
+    method = "loess",
+    se = T,
+    color = "skyblue",
+    linewidth = 1,
+    aes(linetype = "Loess")
+  ) +
+  ggrepel::geom_text_repel(aes(label = anio_pais), size = 1.5) +
+  labs(
+    title = "% de ocupaciones medias y % de población identificada con la clase media",
+    subtitle = "Países seleccionados de América Latina. 2011-2023. Curva LOESS ajustada",
+    x = "% de ocupaciones medias",
+    caption = "Fuente: elaboración propia en base a Latinobarómetro") +
+  scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
+  scale_x_continuous(breaks = scales::pretty_breaks(n = 8),
+                     labels = function(x) paste0(x, "%")) +
+  theme(
+    axis.title.y = element_blank(),
+    legend.position = "none"
+  )
+  
+
+
+# Informalidad
+latinobarometro_sel2 %>%
+  filter(!is.na(clase_subjetiva4)) %>%
+  group_by(anio_pais, informalidad, clase_media) %>%
+  tally(wt) %>%
+  mutate(porcentaje = n / sum(n)) %>%
+  filter(clase_media == 1) %>%
+  ggplot(aes(x = informalidad, y = porcentaje)) +
+  geom_point() +
+  geom_smooth(
+    method = "loess",
+    se = T,
+    color = "skyblue",
+    linewidth = 1,
+    aes(linetype = "Loess")
+  ) +
+  ggrepel::geom_text_repel(aes(label = anio_pais), size = 1.5) +
+  labs(
+    title = "Tasa de informalidad y % de población identificada con la clase media",
+    subtitle = "Países seleccionados de América Latina. 2011-2023. Curva LOESS ajustada",
+    x = "Tasa de informalidad",
+    caption = "Fuente: elaboración propia en base a Latinobarómetro") +
+  scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
+  scale_x_continuous(breaks = scales::pretty_breaks(n = 8),
+                     labels = function(x) paste0(x, "%")) +
+  theme(
+    axis.title.y = element_blank(),
+    legend.position = "none"
+  )
+```
+
+## Análisis multinivel - Resultados {background-image="imagenes/fondo_blanco.jpeg" background-opacity="0.10"} 
+
+::: incremental
+
+- 5% de varianza explicada por las variables referidas a los países y años.  
+
+- Se estimaron 6 modelos:  
+  - Interceptos aleatorios (Mod 1)
+  - Interacciones entre niveles tomando a la varible de estratificación objetiva (Mod 2 a 5)
+  - Pendientes aleatorias: se deja variar a la estratificación objetiva (Mod 6).  
+  
+:::
+
+## Análisis multinivel - Efectos fijos {background-image="imagenes/fondo_blanco.jpeg" background-opacity="0.10"} 
+
+![](graficos/clase_subjetiva/efectos_fijos.png){fig-align="center"}
+
+## Análisis multinivel - Efectos aleatorios {background-image="imagenes/fondo_blanco.jpeg" background-opacity="0.10"} 
+
+![](graficos/clase_subjetiva/interceptos_pendientes_aleatorias.png){fig-align="center"}
+  
+# Conclusiones {background-image="imagenes/fondo intro.png" .white-title}
+
+## Conclusiones (I) {background-image="imagenes/fondo_blanco.jpeg" background-opacity="0.10"}  
+
+::: incremental
+
+- **H1**: La población latinoamericana tiene un cierto reconocimiento sobre el lugar que ocupa en la estructura social: [*grado razonable de arreglo objetivo - subjetivo*]{style="color:red;"}.  
+
+- **H2**: El posicionamiento subjetivo de clase es también una [*manifestación sintética*]{style="color:red;"} del modo en que se percibe la desigualdad y la situación económica.  
+
+- **H3**: Carácter  mediador de las estructuras sociales a nivel nacional sobre el posicionamiento  subjetivo de clase a nivel individual.  
+  - A mayor desigualdad, más evidente y trasparente es la relación entre posición objetiva y subjetiva de clase.  
+
+:::
+
+## Conclusiones (II) {background-image="imagenes/fondo_blanco.jpeg" background-opacity="0.10"}
+
+- Es importante considerar el peso de las estructuras nacionales para comprender el proceso de [*distorsión subjetiva*]{style="color:red;"}.  
+  - El efecto del posicionamiento objetivo sobre la clase subjetiva varía entre páises y en el tiempo.  
+  
+  
+# ¡Muchas gracias! {background-image="imagenes/fondo intro.png" .white-title style="text-align: center;"}  
+
+[{{< fa envelope >}} [gonzalo.assusa@unc.edu.ar](mailto:gonzalo.assusa@unc.edu.ar)]{.contacto}
+
+[{{< fa envelope >}} [jrodriguez@conicet.gov.ar](mailto:jrodriguez@conicet.gov.ar)]{.contacto}
