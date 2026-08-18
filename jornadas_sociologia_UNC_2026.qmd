@@ -779,4 +779,12 @@ latinobarometro_sel2 %>%
 
 [{{< fa envelope >}} [gonzalo.assusa@unc.edu.ar](mailto:gonzalo.assusa@unc.edu.ar)]{.contacto}
 
-[{{< fa envelope >}} [jrodriguez@conicet.gov.ar](mailto:jrodriguez@conicet.gov.ar)]{.contacto}
+[{{< fa envelope >}} [jrodriguez@conicet.gov.ar](mailto:jrodriguez@conicet.gov.ar)]{.contacto}  
+
+::: {style="height: 2em;"}
+:::
+
+
+::: {style="text-align: left;"}
+> [RODRÍGUEZ DE LA FUENTE, J., ASSUSA, G. (2026). Las clases sociales en el ojo del huracán. Posicionamiento subjetivo de clase en 16 países latinoamericanos. Argumentos. Revista de crítica social, (33), 265-305.]{style="color: white;"}
+:::
