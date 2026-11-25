@@ -23,7 +23,7 @@ format:
       data-background-opacity: "0.10"
 from: markdown+emoji
 execute:
-  cache: true
+  cache: false
   warning: false
   message: false
   echo: false
@@ -704,7 +704,7 @@ Relación entre estructura objetiva y subjetiva (Sosnaud et al., 2013):
 - Autoubicarse en la clase media es también *hablar de* desigualdad, injusticia y crisis (CEPAL, 2010).
 :::
 
-## Hipótesis de grupo de referencia  
+## Hipótesis de grupo de referencia (I)
 
 ::: {.column width="50%"}
 
@@ -766,6 +766,36 @@ enrs %>%
 :::
 :::
 
+## Hipótesis de grupo de referencia (II)
+
+```{r grupo de referencia 3}
+
+tabla <- enrs %>%
+  filter(!is.na(amigos_otra_posicion), !is.na(clase)) %>%
+  count(clase, amigos_otra_posicion, wt = pond_final) %>%
+  group_by(clase) %>%
+  mutate(prop = n / sum(n)) %>%
+  ungroup() %>% 
+  filter(amigos_otra_posicion == "Sí")
+
+tabla %>% 
+  ggplot(aes(x = fct_rev(clase), y = prop)) +
+  geom_col(fill = "lightblue", alpha = .7) +
+  coord_flip() +
+  geom_text(aes(label = scales::percent(prop, accuracy = 1)), hjust = 2,
+            size = 3) +
+  labs(title = "Porcentaje de personas que tienen amigos/as en otra posición social",
+       subtitle = "Argentina urbana",
+       caption = "Fuente: ENRS 2019-2020") +
+  theme_light() +
+  theme(axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
+        axis.text.x = element_text(size = 11),
+        axis.text.y = element_text(size = 11)) +
+  scale_y_continuous(labels = scales::percent_format(accuracy = 1))
+```
+
+
 # Conclusiones {background-image="imagenes/fondo intro.png" .white-title}
 
 ## Conclusiones (I) {background-image="imagenes/fondo_blanco.jpeg" background-opacity="0.10"}  
@@ -781,19 +811,12 @@ enrs %>%
 
 :::
 
+
 ## Conclusiones (II) {background-image="imagenes/fondo_blanco.jpeg" background-opacity="0.10"}
 
 - Es importante considerar el peso de las estructuras nacionales para comprender el proceso de [*distorsión subjetiva*]{style="color:red;"}.  
   - El efecto del posicionamiento objetivo sobre la clase subjetiva varía entre páises y en el tiempo.  
 
-## Limitaciones y agenda {background-image="imagenes/fondo_blanco.jpeg" background-opacity="0.10"}
-
-- Sin la escala social subjetiva (discontinuada en 2020) ni categorías de "clase obrera/trabajadora".
-- Índice objetivo basado en ocupación, educación y bienes: no incluye ingresos.
-- Efecto de las variables laborales agregadas: sin consenso en la bibliografía. En Argentina hay evidencia del efecto de la formalidad y la afiliación sindical (Assusa y Rodríguez de la Fuente, 2024).
-- Agenda: ampliar el abordaje cualitativo de la clase media baja a otros países.
-  
-  
 # ¡Muchas gracias! {background-image="imagenes/fondo intro.png" .white-title style="text-align: center;"}  
 
 [{{< fa envelope >}} [gonzalo.assusa@unc.edu.ar](mailto:gonzalo.assusa@unc.edu.ar)]{.contacto}
