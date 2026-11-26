@@ -362,7 +362,7 @@ enrs <- enrs %>%
 :::
 
 ::: fragment
-- **Hipótesis grupo de referencia (parcial)**: Las personas suelen compararse con otros de similar posición social.  
+- **Hipótesis grupo de referencia (parcial)**: Las personas suelen compararse con otros de similar posición social, y esto tiende a que suelan ubicarse en el *medio*.  
 :::
 
 :::
@@ -704,47 +704,11 @@ Relación entre estructura objetiva y subjetiva (Sosnaud et al., 2013):
 - Autoubicarse en la clase media es también *hablar de* desigualdad, injusticia y crisis (CEPAL, 2010).
 :::
 
-## Hipótesis de grupo de referencia (I)
+## Hipótesis de grupo de referencia
 
 ::: {.column width="50%"}
 
 ```{r grupo de referencia por clase}
-#| fig-width: 7
-#| fig-height: 7
-
-tabla <- enrs %>%
-  filter(!is.na(posicion_amigo1)) %>%
-  count(clase, posicion_amigo1, wt = pond_final) %>%
-  group_by(clase) %>%
-  mutate(prop = n / sum(n)) %>%
-  ungroup()
-
-tabla %>%
-  filter(!is.na(clase)) %>%
-  ggplot(aes(x = fct_rev(clase), y = prop, fill = posicion_amigo1)) +
-  geom_col(alpha = .7) +
-  coord_flip() +
-  geom_text(aes(label = scales::percent(prop, accuracy = 1)), hjust = 1,
-            size = 3, position = position_stack(vjust = 0.5)) +
-  labs(title = "Porcentaje de personas que se consideran en una \nposición más alta, igual o más baja que su amigo N°1",
-       subtitle = "Argentina urbana",
-       caption = "Fuente: ENRS 2019-2020") +
-  theme_light() +
-  theme(axis.title.x = element_blank(),
-        axis.title.y = element_blank(),
-        axis.text.x = element_text(size = 11),
-        axis.text.y = element_text(size = 11),
-        legend.position = "bottom",
-        legend.title = element_blank()) +
-  scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
-  scale_x_discrete(labels = function(x) str_wrap(x, width = 40))
-
-```
-:::
-::: {.column width="50%"}
-::: fragment
-
-```{r grupo de referencia por clase 2}
 #| fig-width: 7
 #| fig-height: 7
 
@@ -755,20 +719,24 @@ enrs %>%
   geom_density(fill = "lightblue", alpha = 0.5) +
   facet_wrap(~clase, labeller = as_labeller(function(x) str_trunc(x, width = 30))) +
   theme_light() +
-  theme(strip.text = element_text(size = 10),
+  theme(strip.text = element_text(size = 11),
         axis.title.x = element_blank(),
-        axis.title.y = element_blank()) +
+        axis.title.y = element_blank(),
+        plot.title = element_text(size = 14),
+        plot.subtitle = element_text(size = 12)) +
   labs(title = "Distribución del índice de posición relativa (5 amigos) por clase",
        subtitle = "Argentina urbana",
        caption = "Fuente: ENRS 2019-2020")
 
 ```
-:::
-:::
 
-## Hipótesis de grupo de referencia (II)
+:::
+::: {.column width="50%"}
+::: fragment
 
-```{r grupo de referencia 3}
+```{r grupo de referencia 2}
+#| fig-width: 7
+#| fig-height: 7
 
 tabla <- enrs %>%
   filter(!is.na(amigos_otra_posicion), !is.na(clase)) %>%
@@ -783,17 +751,25 @@ tabla %>%
   geom_col(fill = "lightblue", alpha = .7) +
   coord_flip() +
   geom_text(aes(label = scales::percent(prop, accuracy = 1)), hjust = 2,
-            size = 3) +
-  labs(title = "Porcentaje de personas que tienen amigos/as en otra posición social",
+            size = 3.5) +
+  labs(title = "Porcentaje de personas que tienen amigos/as en \notra posición social",
        subtitle = "Argentina urbana",
        caption = "Fuente: ENRS 2019-2020") +
   theme_light() +
   theme(axis.title.x = element_blank(),
         axis.title.y = element_blank(),
-        axis.text.x = element_text(size = 11),
-        axis.text.y = element_text(size = 11)) +
+        axis.text.x = element_text(size = 12),
+        axis.text.y = element_text(size = 11),
+        plot.title = element_text(size = 14),
+        plot.subtitle = element_text(size = 12)) +
   scale_y_continuous(labels = scales::percent_format(accuracy = 1))
 ```
+
+:::
+:::
+
+
+
 
 
 # Conclusiones {background-image="imagenes/fondo intro.png" .white-title}
@@ -816,6 +792,12 @@ tabla %>%
 
 - Es importante considerar el peso de las estructuras nacionales para comprender el proceso de [*distorsión subjetiva*]{style="color:red;"}.  
   - El efecto del posicionamiento objetivo sobre la clase subjetiva varía entre páises y en el tiempo.  
+  
+- **Hipótesis de grupo de referencia**: con los datos existentes no es validada.  
+  - Las clases directiva-profesional, técnica-rutinaria y pequeña burguesía muestran contactos más diversos en términos de posición social que la clase trabajadora.  
+  - El *disponibilidad heurística* no es similar entre todas las posiciones.  
+  
+  
 
 # ¡Muchas gracias! {background-image="imagenes/fondo intro.png" .white-title style="text-align: center;"}  
 
